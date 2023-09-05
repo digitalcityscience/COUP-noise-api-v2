@@ -1,3 +1,5 @@
 fastapi==0.103.0
 pydantic[email]
 uvicorn==0.23.0
+celery[redis]==5.3.1
+flower==2.0.0
