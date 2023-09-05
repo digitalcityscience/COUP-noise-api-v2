@@ -1,0 +1,17 @@
+version: "3.7"
+services:
+  noise_api:
+    build: .
+    env_file: .env
+    ports:
+      - '8000:80'
+    command: uvicorn noise_api.api.main:app --host 0.0.0.0 --port 80 --reload
+    networks:
+      &network_mode
+      - bridgenet
+    volumes:
+      - ./:/app
+
+networks:
+  bridgenet:
+    driver: bridge
