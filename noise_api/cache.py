@@ -25,9 +25,7 @@ class Cache:
     def get(self, *, key: str) -> dict:
         key = self._make_key(key)
         serialized_value = self._redis.get(key)
-        if serialized_value is None:
-            return None
-        return json.loads(serialized_value)
+        return None if serialized_value is None else json.loads(serialized_value)
 
     def put(self, *, key: str, value: dict) -> None:
         key = self._make_key(key)
