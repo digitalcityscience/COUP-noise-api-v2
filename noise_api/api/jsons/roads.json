@@ -1,0 +1,672 @@
+{
+    "type": "FeatureCollection",
+    "name": "roads_wgs_grasbrook",
+    "crs": {
+        "type": "name",
+        "properties": {
+            "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+        }
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 101,
+                "traffic_settings_adjustable": false,
+                "road_type": "railroad",
+                "train_speed": 80,
+                "trains_per_hour": 26,
+                "ground_type": 1,
+                "has_anti_vibration": false,
+                "truck_traffic_daily": null,
+                "car_traffic_daily": null,
+                "max_speed": null
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.023951127520549,
+                        53.534338704949676
+                    ],
+                    [
+                        10.017035874993097,
+                        53.526870172586463
+                    ],
+                    [
+                        10.01535445425897,
+                        53.52497990122113
+                    ],
+                    [
+                        10.012794119438173,
+                        53.521328532230179
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 102,
+                "traffic_settings_adjustable": false,
+                "road_type": "railroad",
+                "train_speed": 80,
+                "trains_per_hour": 26,
+                "ground_type": 1,
+                "has_anti_vibration": false,
+                "truck_traffic_daily": null,
+                "car_traffic_daily": null,
+                "max_speed": null
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.02399055616309,
+                        53.534312652655849
+                    ],
+                    [
+                        10.017075301032786,
+                        53.526844122553285
+                    ],
+                    [
+                        10.015393879597392,
+                        53.5249538517376
+                    ],
+                    [
+                        10.012833542997255,
+                        53.521302483583618
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 103,
+                "traffic_settings_adjustable": false,
+                "road_type": "railroad",
+                "train_speed": 80,
+                "trains_per_hour": 26,
+                "ground_type": 1,
+                "has_anti_vibration": false,
+                "truck_traffic_daily": null,
+                "car_traffic_daily": null,
+                "max_speed": null
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.024046595599227,
+                        53.534285224548931
+                    ],
+                    [
+                        10.017131335183446,
+                        53.526816697678534
+                    ],
+                    [
+                        10.01544991236562,
+                        53.524926427648822
+                    ],
+                    [
+                        10.012889572647026,
+                        53.521275060692858
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 1,
+                "traffic_settings_adjustable": false,
+                "road_type": "boulevard",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 960,
+                "car_traffic_daily": 11770,
+                "max_speed": 60
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.023389907871893,
+                        53.534495787991581
+                    ],
+                    [
+                        10.018007741180316,
+                        53.528787492926085
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 2,
+                "traffic_settings_adjustable": false,
+                "road_type": "boulevard",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 790,
+                "car_traffic_daily": 2615,
+                "max_speed": 60
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.008155631523788,
+                        53.523402629880358
+                    ],
+                    [
+                        9.989358740483857,
+                        53.526297702615167
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 3,
+                "traffic_settings_adjustable": false,
+                "road_type": "boulevard",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 790,
+                "car_traffic_daily": 2615,
+                "max_speed": 60
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.012219483626744,
+                        53.523280108627191
+                    ],
+                    [
+                        10.011563310543469,
+                        53.523107087581913
+                    ],
+                    [
+                        10.010736794828906,
+                        53.523043529689922
+                    ],
+                    [
+                        10.009828931100333,
+                        53.523137181484735
+                    ],
+                    [
+                        10.00822168735532,
+                        53.523380026633973
+                    ],
+                    [
+                        10.008165495117522,
+                        53.523402546708176
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 4,
+                "traffic_settings_adjustable": false,
+                "road_type": "boulevard",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 2040,
+                "car_traffic_daily": 9125,
+                "max_speed": 60
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.018007741180316,
+                        53.528787492926085
+                    ],
+                    [
+                        10.0150686298969,
+                        53.525453228703384
+                    ],
+                    [
+                        10.01459813428357,
+                        53.524962651595857
+                    ],
+                    [
+                        10.014335422596513,
+                        53.524703265293425
+                    ],
+                    [
+                        10.01420143520423,
+                        53.524463363048277
+                    ],
+                    [
+                        10.01338589256598,
+                        53.523775821694954
+                    ],
+                    [
+                        10.012856668000119,
+                        53.523509872303471
+                    ],
+                    [
+                        10.012249284490858,
+                        53.523288674819469
+                    ],
+                    [
+                        10.012220421472291,
+                        53.52328065184323
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 1000,
+                "traffic_settings_adjustable": true,
+                "road_type": "street",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 960,
+                "car_traffic_daily": 10810,
+                "max_speed": 50
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.01931168469268,
+                        53.530452837275874
+                    ],
+                    [
+                        10.018446663573906,
+                        53.530853650374993
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 1001,
+                "traffic_settings_adjustable": true,
+                "road_type": "street",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 410,
+                "car_traffic_daily": 6580,
+                "max_speed": 50
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.018446663573906,
+                        53.530853650374993
+                    ],
+                    [
+                        10.019322529890301,
+                        53.531851764422605
+                    ],
+                    [
+                        10.018342801673782,
+                        53.532156191513202
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 1002,
+                "traffic_settings_adjustable": true,
+                "road_type": "street",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 270,
+                "car_traffic_daily": 4400,
+                "max_speed": 50
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.018342801673782,
+                        53.532156191513202
+                    ],
+                    [
+                        10.017277294910514,
+                        53.532510090234524
+                    ],
+                    [
+                        10.016147037654326,
+                        53.532844801720593
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 1004,
+                "traffic_settings_adjustable": true,
+                "road_type": "street",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 40,
+                "car_traffic_daily": 605,
+                "max_speed": 50
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.016147037654326,
+                        53.532844801720593
+                    ],
+                    [
+                        10.015477031042025,
+                        53.533078351682192
+                    ],
+                    [
+                        10.014775750410157,
+                        53.53324939999397
+                    ],
+                    [
+                        10.013703162402164,
+                        53.533504093281586
+                    ],
+                    [
+                        10.013538953912985,
+                        53.533532773651885
+                    ],
+                    [
+                        10.013314676735023,
+                        53.533591605989592
+                    ],
+                    [
+                        10.013024634552526,
+                        53.533669480688339
+                    ],
+                    [
+                        10.012675354355299,
+                        53.533725689030462
+                    ],
+                    [
+                        10.012215999470222,
+                        53.53380037399009
+                    ],
+                    [
+                        10.011865645911321,
+                        53.533855304000653
+                    ],
+                    [
+                        10.011580663594275,
+                        53.533909563162567
+                    ],
+                    [
+                        10.010501576030183,
+                        53.534085146287666
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 1005,
+                "traffic_settings_adjustable": true,
+                "road_type": "street",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 85,
+                "car_traffic_daily": 1050,
+                "max_speed": 50
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.010501576030183,
+                        53.534085146287666
+                    ],
+                    [
+                        10.00962381612263,
+                        53.534175590231037
+                    ],
+                    [
+                        10.009443433134278,
+                        53.534204080243249
+                    ],
+                    [
+                        10.009247548843126,
+                        53.534223992605192
+                    ],
+                    [
+                        10.00768155351609,
+                        53.534342260065969
+                    ],
+                    [
+                        10.007174868268068,
+                        53.533980506184832
+                    ],
+                    [
+                        10.006204678460604,
+                        53.53315269469924
+                    ],
+                    [
+                        10.006063341064083,
+                        53.533031036443418
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 1006,
+                "traffic_settings_adjustable": true,
+                "road_type": "street",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 45,
+                "car_traffic_daily": 445,
+                "max_speed": 50
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.006063341064083,
+                        53.533031036443418
+                    ],
+                    [
+                        10.009311360318703,
+                        53.531610592735795
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 1007,
+                "traffic_settings_adjustable": true,
+                "road_type": "street",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 210,
+                "car_traffic_daily": 1365,
+                "max_speed": 50
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.009311360318703,
+                        53.531610592735795
+                    ],
+                    [
+                        10.01307670679873,
+                        53.530094261461052
+                    ],
+                    [
+                        10.01198068003338,
+                        53.529074770510654
+                    ],
+                    [
+                        10.013156968216599,
+                        53.528590481873429
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 1008,
+                "traffic_settings_adjustable": true,
+                "road_type": "street",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 1560,
+                "car_traffic_daily": 3315,
+                "max_speed": 50
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.013156968216599,
+                        53.528590481873429
+                    ],
+                    [
+                        10.011019597442715,
+                        53.526262434569851
+                    ],
+                    [
+                        10.010700938438506,
+                        53.526184227322183
+                    ],
+                    [
+                        10.010564554024743,
+                        53.526158413010855
+                    ],
+                    [
+                        10.010291144054099,
+                        53.526079822217589
+                    ],
+                    [
+                        10.01010117316096,
+                        53.525703887558784
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 1009,
+                "traffic_settings_adjustable": true,
+                "road_type": "street",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 765,
+                "car_traffic_daily": 1665,
+                "max_speed": 50
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.01010117316096,
+                        53.525703887558784
+                    ],
+                    [
+                        10.010006188990866,
+                        53.525515920101569
+                    ],
+                    [
+                        10.009816864515241,
+                        53.525166946641001
+                    ],
+                    [
+                        10.009626260820001,
+                        53.524764049420732
+                    ],
+                    [
+                        10.009389133137025,
+                        53.524307610411391
+                    ],
+                    [
+                        10.008190979746313,
+                        53.523400837395933
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 1011,
+                "traffic_settings_adjustable": true,
+                "road_type": "street",
+                "train_speed": null,
+                "trains_per_hour": null,
+                "ground_type": null,
+                "has_anti_vibration": null,
+                "truck_traffic_daily": 1720,
+                "car_traffic_daily": 4660,
+                "max_speed": 50
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        10.016749846753623,
+                        53.527427363921532
+                    ],
+                    [
+                        10.013561643662326,
+                        53.528479183665091
+                    ],
+                    [
+                        10.013156968216599,
+                        53.528590481873429
+                    ]
+                ]
+            }
+        }
+    ]
+}
