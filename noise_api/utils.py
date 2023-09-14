@@ -13,3 +13,8 @@ def hash_dict(dict_) -> str:
 
 def enum_to_list(enum_class: Enum) -> list[str]:
     return [member.value for member in enum_class]
+
+
+def load_json_file(path: str) -> dict:
+    with open(path, "r") as f:
+        return json.loads(f.read())

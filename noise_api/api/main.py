@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 
+from noise_api.api.endpoints import router as tasks_router
 from noise_api.config import settings
 
 app = FastAPI(
@@ -13,6 +14,9 @@ app = FastAPI(
 @app.get("/health_check", tags=["ROOT"])
 async def health_check():
     return "ok"
+
+
+app.include_router(tasks_router)
 
 
 if __name__ == "__main__":

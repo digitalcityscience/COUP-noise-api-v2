@@ -3,8 +3,9 @@ pydantic[email]==1.10.12
 uvicorn==0.23.0
 celery[redis]==5.3.1
 flower==2.0.0
-pydantic-geojson 0.1.1
 geopandas==0.13.2
+
+# pydantic-geojson==0.1.1
 
 # Fiona
 # geomet

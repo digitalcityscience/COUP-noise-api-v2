@@ -1,15 +1,14 @@
-import hashlib
-import json
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field
 
 from noise_api.models.base import BaseModelStrict
+from noise_api.utils import hash_dict, load_json_file
 
-
-def hash_dict(dict_) -> str:
-    dict_str = json.dumps(dict_, sort_keys=True)
-    return hashlib.md5(dict_str.encode()).hexdigest()
+JSONS_DIR = Path(__file__).parent / "jsons"
+BUILDINGS = JSONS_DIR / "buildings.json"
+ROADS = JSONS_DIR / "roads.json"
 
 
 class NoiseScenario(BaseModelStrict):
@@ -18,11 +17,22 @@ class NoiseScenario(BaseModelStrict):
         ..., ge=0, le=100, description="Traffic quota in percent (0-100)"
     )
     result_format: Literal["png", "geojson"] = "geojson"
+    # TODO: conversion and option should be implemented at the CUT API level
 
 
 class NoiseCalculationInput(NoiseScenario):
     buildings: dict
     roads: dict
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "max_speed": 42,
+                "traffic_quota": 40,
+                "buildings": load_json_file(BUILDINGS),
+                "roads": load_json_file(ROADS),
+            }
+        }
 
 
 class NoiseTask(NoiseCalculationInput):
