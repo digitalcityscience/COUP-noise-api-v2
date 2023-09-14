@@ -324,3 +324,4 @@ dev_files/
 *.db
 files/
 redis-data/
+log.txt
