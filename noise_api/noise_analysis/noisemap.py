@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 from time import sleep
 
+from noise_api.noise_analysis.queries import CREATE_ALIAS
 from noise_api.noise_analysis.sql_query_builder import (
     get_road_queries,
     get_traffic_queries,
@@ -100,17 +101,9 @@ def initiate_database_connection(psycopg2):
     cursor = conn.cursor()
     print("Connected!\n")
 
-    # Initialize spatial features
-    def create_alias(alias_name, function_name):
-        cursor.execute(
-            f'CREATE ALIAS IF NOT EXISTS {alias_name} FOR "{function_name}";'
-        )
-
-    create_alias("H2GIS_SPATIAL", "org.h2gis.functions.factory.H2GISFunctions.load")
-    cursor.execute("CALL H2GIS_SPATIAL();")
-
     # Initialize NoiseModelling functions
     functions_to_initialize = [
+        ("H2GIS_SPATIAL", "org.h2gis.functions.factory.H2GISFunctions.load"),
         ("BR_PtGrid3D", "org.orbisgis.noisemap.h2.BR_PtGrid3D.noisePropagation"),
         ("BR_PtGrid", "org.orbisgis.noisemap.h2.BR_PtGrid.noisePropagation"),
         (
@@ -128,7 +121,14 @@ def initiate_database_connection(psycopg2):
     ]
 
     for alias_name, function_name in functions_to_initialize:
-        create_alias(alias_name, function_name)
+        cursor.execute(
+            CREATE_ALIAS.substitute(
+                alias=alias_name,
+                func=function_name,
+            )
+        )
+
+    cursor.execute("CALL H2GIS_SPATIAL();")
 
     return conn, cursor
 
