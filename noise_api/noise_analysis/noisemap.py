@@ -18,15 +18,17 @@ from noise_api.noise_analysis.sql_query_builder import (
 
 logger = logging.getLogger(__name__)
 
+DB_NAME = (os.path.abspath(".") + os.sep + "mydb").replace(os.sep, "/")
+
 
 def get_result_path():
     cwd = os.path.dirname(os.path.abspath(__file__))
-    results_folder = os.path.abspath(cwd + "/results/")
+    results_folder = os.path.abspath(f"{cwd}/results/")
 
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
 
-    return os.path.abspath(results_folder + "/" "result.geojson")
+    return os.path.abspath(f"{results_folder}/result.geojson")
 
 
 ORBISGIS_DIR = Path(__file__).parent / "orbisgis_java"
@@ -74,9 +76,9 @@ def initiate_database_connection(psycopg2):
     # TODO: invoke db from subprocess if not running
     # Define our connection string
     # db name has to be an absolute path
-    db_name = (os.path.abspath(".") + os.sep + "mydb").replace(os.sep, "/")
+
     conn_string = (
-        f"host='localhost' port=5435 dbname='{db_name}' user='sa' password='sa'"
+        f"host='localhost' port=5435 dbname='{DB_NAME}' user='sa' password='sa'"
     )
 
     # print the connection string we will use to connect
@@ -90,25 +92,7 @@ def initiate_database_connection(psycopg2):
     print("Connected!\n")
 
     # Initialize NoiseModelling functions
-    functions_to_initialize = [
-        ("H2GIS_SPATIAL", "org.h2gis.functions.factory.H2GISFunctions.load"),
-        ("BR_PtGrid3D", "org.orbisgis.noisemap.h2.BR_PtGrid3D.noisePropagation"),
-        ("BR_PtGrid", "org.orbisgis.noisemap.h2.BR_PtGrid.noisePropagation"),
-        (
-            "BR_SpectrumRepartition",
-            "org.orbisgis.noisemap.h2.BR_SpectrumRepartition.spectrumRepartition",
-        ),
-        ("BR_EvalSource", "org.orbisgis.noisemap.h2.BR_EvalSource.evalSource"),
-        ("BTW_EvalSource", "org.orbisgis.noisemap.h2.BTW_EvalSource.evalSource"),
-        (
-            "BR_SpectrumRepartition",
-            "org.orbisgis.noisemap.h2.BR_SpectrumRepartition.spectrumRepartition",
-        ),
-        ("BR_TriGrid", "org.orbisgis.noisemap.h2.BR_TriGrid.noisePropagation"),
-        ("BR_TriGrid3D", "org.orbisgis.noisemap.h2.BR_TriGrid3D.noisePropagation"),
-    ]
-
-    for alias_name, function_name in functions_to_initialize:
+    for alias_name, function_name in queries.FUNCTIONS_TO_INIT:
         cursor.execute(
             queries.CREATE_ALIAS.substitute(
                 alias=alias_name,
@@ -118,11 +102,15 @@ def initiate_database_connection(psycopg2):
 
     cursor.execute("CALL H2GIS_SPATIAL();")
 
-    print("-----****-----" * 100)
-    print("it worked")
-    print("-----****-----" * 100)
-
     return conn, cursor
+
+
+def export_result_from_db_to_geojson(cursor):
+    geojson_path = get_result_path()
+    cursor.execute(f"CALL GeoJsonWrite('{geojson_path}', 'CONTOURING_NOISE_MAP');")
+
+    with open(geojson_path) as f:
+        return json.load(f)
 
 
 def calculate_noise_result(
@@ -132,74 +120,53 @@ def calculate_noise_result(
     # Sending/Receiving geometry data using odbc connection is very slow
     # It is advised to use shape file or other storage format, so use SHPREAD or FILETABLE sql functions
 
-    print("make buildings table ..")
-
     reset_all_roads()
 
     cursor.execute(queries.RESET_BUILDINGS_TABLE)
-
-    buildings_queries = make_building_queries(buildings_geojson)
-    for building in buildings_queries:
-        # print('building:', building)
-        # Inserting building into database
-        cursor.execute(queries.INSERT_BUILDING.substitute(building=building))
-
-    print("Make roads table (just geometries and road type)..")
     cursor.execute(queries.RESET_ROADS_GEOM_TABLE)
-    roads_queries = get_road_queries(traffic_settings, roads_geojson)
-    for road in roads_queries:
-        # print('road:', road)
-        cursor.execute("""{0}""".format(road))
-
-    print("Make traffic information table..")
     cursor.execute(queries.RESET_ROADS_TRAFFIC_TABLE)
 
+    print("Making buildings table ...")
+    buildings_queries = make_building_queries(buildings_geojson)
+    for building in buildings_queries:
+        cursor.execute(queries.INSERT_BUILDING.substitute(building=building))
+
+    print("Making roads table ...")
+    roads_queries = get_road_queries(traffic_settings, roads_geojson)
+    for road in roads_queries:
+        cursor.execute("""{0}""".format(road))
+
+    print("Making traffic information table ...")
     traffic_queries = get_traffic_queries()
     for traffic_query in traffic_queries:
-        print(traffic_query)
         cursor.execute("""{0}""".format(traffic_query))
 
-    print("Duplicate geometries to give sound level for each traffic direction..")
+    print("Duplicating geometries to give sound level for each traffic direction ...")
     cursor.execute(queries.RESET_ROADS_DIR_TABLES)
 
-    print("Compute the sound level for each segment of roads..")
+    print("Computing the sound level for each segment of roads ...")
 
     # compute the power of the noise source and add it to the table roads_src_global
     # for railroads (road_type = 99) use the function BTW_EvalSource (TW = Tramway)
     # for car roads use the function BR_EvalSource
     cursor.execute(queries.RESET_ROADS_GLOBAL_TABLE)
 
-    print("Apply frequency repartition of road noise level..")
-
+    print("Applying frequency repartition of road noise level ...")
     cursor.execute(queries.RESET_ROADS_SRC_TABLE)
 
-    print("Please wait, sound propagation from sources through buildings..")
-
+    print("Please wait, sound propagation from sources through buildings ...")
     cursor.execute(queries.RESET_TRI_LVL_TABLE)
 
     print("Computation done !")
 
-    print("Create isocountour and save it as a geojson in the working folder..")
-
+    print("Creating isocountour and save it as a geojson in the working folder..")
     cursor.execute(queries.RESET_TRICONTOURING_MAP)
 
-    # export result from database to geojson
-    # time_stamp = str(datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
-
-    geojson_path = get_result_path()
-    cursor.execute("CALL GeoJsonWrite('" + geojson_path + "', 'CONTOURING_NOISE_MAP');")
-
-    print("*********")
-    print(traffic_queries)
-    print("*********")
-
-    with open(geojson_path) as f:
-        resultdata = json.load(f)
-
-        return resultdata
+    return export_result_from_db_to_geojson(cursor)
 
 
 def run_noise_calculation(task_def: dict):
+    # TODO use a context manager here for the subprocess
     h2_subprocess, psycopg2 = boot_h2_database_in_subprocess()
     conn, psycopg2_cursor = initiate_database_connection(psycopg2)
 

@@ -6,6 +6,24 @@ from noise_api.config import settings
 
 CREATE_ALIAS = Template("""CREATE ALIAS IF NOT EXISTS $alias FOR \"$func\";""")
 
+FUNCTIONS_TO_INIT = [
+    ("H2GIS_SPATIAL", "org.h2gis.functions.factory.H2GISFunctions.load"),
+    ("BR_PtGrid3D", "org.orbisgis.noisemap.h2.BR_PtGrid3D.noisePropagation"),
+    ("BR_PtGrid", "org.orbisgis.noisemap.h2.BR_PtGrid.noisePropagation"),
+    (
+        "BR_SpectrumRepartition",
+        "org.orbisgis.noisemap.h2.BR_SpectrumRepartition.spectrumRepartition",
+    ),
+    ("BR_EvalSource", "org.orbisgis.noisemap.h2.BR_EvalSource.evalSource"),
+    ("BTW_EvalSource", "org.orbisgis.noisemap.h2.BTW_EvalSource.evalSource"),
+    (
+        "BR_SpectrumRepartition",
+        "org.orbisgis.noisemap.h2.BR_SpectrumRepartition.spectrumRepartition",
+    ),
+    ("BR_TriGrid", "org.orbisgis.noisemap.h2.BR_TriGrid.noisePropagation"),
+    ("BR_TriGrid3D", "org.orbisgis.noisemap.h2.BR_TriGrid3D.noisePropagation"),
+]
+
 INSERT_BUILDING = Template(
     """
         -- Insert 1 building from automated string
