@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 from time import sleep
 
+from noise_api.config import settings
 from noise_api.noise_analysis.queries import CREATE_ALIAS
 from noise_api.noise_analysis.sql_query_builder import (
     get_road_queries,
@@ -24,21 +25,6 @@ def get_result_path():
         os.makedirs(results_folder)
 
     return os.path.abspath(results_folder + "/" "result.geojson")
-
-
-# Returns computation settings
-def get_settings():
-    return {
-        "settings_name": "max triangle area",
-        "max_prop_distance": 750,  # the lower the less accurate
-        "max_wall_seeking_distance": 50,  # the lower  the less accurate
-        "road_with": 1.5,  # the higher the less accurate
-        "receiver_densification": 2.8,  # the higher the less accurate
-        "max_triangle_area": 275,  # the higher the less accurate
-        "sound_reflection_order": 0,  # the higher the less accurate
-        "sound_diffraction_order": 0,  # the higher the less accurate
-        "wall_absorption": 0.23,  # the higher the less accurate
-    }
 
 
 ORBISGIS_DIR = Path(__file__).parent / "orbisgis_java"
@@ -263,7 +249,7 @@ def calculate_noise_result(
     st_expand(st_envelope(st_accum(the_geom)), 750, 750) the_geom from ROADS_SRC),'buildings','roads_src','DB_M','',
     {max_prop_distance},{max_wall_seeking_distance},{road_with},{receiver_densification},{max_triangle_area},
     {sound_reflection_order},{sound_diffraction_order},{wall_absorption}); """.format(
-            **get_settings()
+            **settings.computation.dict()
         )
     )
 
