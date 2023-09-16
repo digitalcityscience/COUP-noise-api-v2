@@ -1,20 +1,22 @@
 from __future__ import print_function
 
 import json
+import logging
 import os
 import shlex
 import subprocess
 from pathlib import Path
 from time import sleep
 
-from noise_api.config import settings
-from noise_api.noise_analysis.queries import CREATE_ALIAS
+from noise_api.noise_analysis import queries
 from noise_api.noise_analysis.sql_query_builder import (
     get_road_queries,
     get_traffic_queries,
     make_building_queries,
     reset_all_roads,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_result_path():
@@ -108,13 +110,17 @@ def initiate_database_connection(psycopg2):
 
     for alias_name, function_name in functions_to_initialize:
         cursor.execute(
-            CREATE_ALIAS.substitute(
+            queries.CREATE_ALIAS.substitute(
                 alias=alias_name,
                 func=function_name,
             )
         )
 
     cursor.execute("CALL H2GIS_SPATIAL();")
+
+    print("-----****-----" * 100)
+    print("it worked")
+    print("-----****-----" * 100)
 
     return conn, cursor
 
@@ -130,57 +136,23 @@ def calculate_noise_result(
 
     reset_all_roads()
 
-    cursor.execute(
-        """
-    drop table if exists buildings;
-    create table buildings ( the_geom GEOMETRY );
-    """
-    )
+    cursor.execute(queries.RESET_BUILDINGS_TABLE)
 
     buildings_queries = make_building_queries(buildings_geojson)
     for building in buildings_queries:
         # print('building:', building)
         # Inserting building into database
-        cursor.execute(
-            """
-        -- Insert 1 building from automated string
-        INSERT INTO buildings (the_geom) VALUES (ST_GeomFromText({0}));
-        """.format(
-                building
-            )
-        )
+        cursor.execute(queries.INSERT_BUILDING.substitute(building=building))
 
     print("Make roads table (just geometries and road type)..")
-    cursor.execute(
-        """
-        drop table if exists roads_geom;
-        create table roads_geom ( the_geom GEOMETRY, NUM INTEGER, node_from INTEGER, node_to INTEGER, road_type INTEGER);
-        """
-    )
+    cursor.execute(queries.RESET_ROADS_GEOM_TABLE)
     roads_queries = get_road_queries(traffic_settings, roads_geojson)
     for road in roads_queries:
         # print('road:', road)
         cursor.execute("""{0}""".format(road))
 
     print("Make traffic information table..")
-    cursor.execute(
-        """
-    drop table if exists roads_traffic;
-     create table roads_traffic ( 
-	node_from INTEGER,
-	node_to INTEGER,
-	load_speed DOUBLE,
-	junction_speed DOUBLE,
-	max_speed DOUBLE,
-	lightVehicleCount DOUBLE,
-	heavyVehicleCount DOUBLE,
-	train_speed DOUBLE,
-	trains_per_hour DOUBLE,
-	ground_type INTEGER,
-	has_anti_vibration BOOLEAN
-	);
-    """
-    )
+    cursor.execute(queries.RESET_ROADS_TRAFFIC_TABLE)
 
     traffic_queries = get_traffic_queries()
     for traffic_query in traffic_queries:
@@ -188,95 +160,28 @@ def calculate_noise_result(
         cursor.execute("""{0}""".format(traffic_query))
 
     print("Duplicate geometries to give sound level for each traffic direction..")
-    cursor.execute(
-        """
-    drop table if exists roads_dir_one;
-    drop table if exists roads_dir_two;
-    CREATE TABLE roads_dir_one AS SELECT the_geom,road_type,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount, train_speed, trains_per_hour, ground_type, has_anti_vibration FROM roads_geom as geo,roads_traffic traff WHERE geo.node_from=traff.node_from AND geo.node_to=traff.node_to;
-    CREATE TABLE roads_dir_two AS SELECT the_geom,road_type,load_speed,junction_speed,max_speed,lightVehicleCount,heavyVehicleCount, train_speed, trains_per_hour, ground_type, has_anti_vibration FROM roads_geom as geo,roads_traffic traff WHERE geo.node_to=traff.node_from AND geo.node_from=traff.node_to;
-    -- Collapse two direction in one table
-    drop table if exists roads_geo_and_traffic;
-    CREATE TABLE roads_geo_and_traffic AS select * from roads_dir_one UNION select * from roads_dir_two;"""
-    )
+    cursor.execute(queries.RESET_ROADS_DIR_TABLES)
 
     print("Compute the sound level for each segment of roads..")
 
     # compute the power of the noise source and add it to the table roads_src_global
     # for railroads (road_type = 99) use the function BTW_EvalSource (TW = Tramway)
     # for car roads use the function BR_EvalSource
-    cursor.execute(
-        """
-    drop table if exists roads_src_global;
-    CREATE TABLE roads_src_global AS SELECT the_geom, 
-    CASEWHEN(
-        road_type = 99,
-        BTW_EvalSource(train_speed, trains_per_hour, ground_type, has_anti_vibration),
-        BR_EvalSource(load_speed,lightVehicleCount,heavyVehicleCount,junction_speed,max_speed,road_type,ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),1)),ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),2)),ST_Length(the_geom),False)
-        ) as db_m from roads_geo_and_traffic;
-	"""
-    )
+    cursor.execute(queries.RESET_ROADS_GLOBAL_TABLE)
 
     print("Apply frequency repartition of road noise level..")
 
-    cursor.execute(
-        """
-    drop table if exists roads_src;
-    CREATE TABLE roads_src AS SELECT the_geom,
-    BR_SpectrumRepartition(100,1,db_m) as db_m100,
-    BR_SpectrumRepartition(125,1,db_m) as db_m125,
-    BR_SpectrumRepartition(160,1,db_m) as db_m160,
-    BR_SpectrumRepartition(200,1,db_m) as db_m200,
-    BR_SpectrumRepartition(250,1,db_m) as db_m250,
-    BR_SpectrumRepartition(315,1,db_m) as db_m315,
-    BR_SpectrumRepartition(400,1,db_m) as db_m400,
-    BR_SpectrumRepartition(500,1,db_m) as db_m500,
-    BR_SpectrumRepartition(630,1,db_m) as db_m630,
-    BR_SpectrumRepartition(800,1,db_m) as db_m800,
-    BR_SpectrumRepartition(1000,1,db_m) as db_m1000,
-    BR_SpectrumRepartition(1250,1,db_m) as db_m1250,
-    BR_SpectrumRepartition(1600,1,db_m) as db_m1600,
-    BR_SpectrumRepartition(2000,1,db_m) as db_m2000,
-    BR_SpectrumRepartition(2500,1,db_m) as db_m2500,
-    BR_SpectrumRepartition(3150,1,db_m) as db_m3150,
-    BR_SpectrumRepartition(4000,1,db_m) as db_m4000,
-    BR_SpectrumRepartition(5000,1,db_m) as db_m5000 from roads_src_global;"""
-    )
+    cursor.execute(queries.RESET_ROADS_SRC_TABLE)
 
     print("Please wait, sound propagation from sources through buildings..")
 
-    cursor.execute(
-        """drop table if exists tri_lvl; create table tri_lvl as SELECT * from BR_TriGrid((select 
-    st_expand(st_envelope(st_accum(the_geom)), 750, 750) the_geom from ROADS_SRC),'buildings','roads_src','DB_M','',
-    {max_prop_distance},{max_wall_seeking_distance},{road_with},{receiver_densification},{max_triangle_area},
-    {sound_reflection_order},{sound_diffraction_order},{wall_absorption}); """.format(
-            **settings.computation.dict()
-        )
-    )
+    cursor.execute(queries.RESET_TRI_LVL_TABLE)
 
     print("Computation done !")
 
     print("Create isocountour and save it as a geojson in the working folder..")
 
-    cursor.execute(
-        """
-    drop table if exists tricontouring_noise_map;
-    -- create table tricontouring_noise_map AS SELECT * from ST_SimplifyPreserveTopology(ST_TriangleContouring('tri_lvl','w_v1','w_v2','w_v3',31622, 100000, 316227, 1000000, 3162277, 1e+7, 31622776, 1e+20));
-    create table tricontouring_noise_map AS SELECT * from ST_TriangleContouring('tri_lvl','w_v1','w_v2','w_v3',31622, 100000, 316227, 1000000, 3162277, 1e+7, 31622776, 1e+20);
-    -- Merge adjacent triangle into polygons (multiple polygon by row, for unique isoLevel and cellId key)
-    drop table if exists multipolygon_iso;
-    create table multipolygon_iso as select ST_UNION(ST_ACCUM(the_geom)) the_geom ,idiso, CELL_ID from tricontouring_noise_map GROUP BY IDISO, CELL_ID;
-    -- Explode each row to keep only a polygon by row
-    drop table if exists simple_noise_map;
-    -- example form internet : CREATE TABLE roads2 AS SELECT id_way, ST_PRECISIONREDUCER(ST_SIMPLIFYPRESERVETOPOLOGY(THE_GEOM),0.1),1) the_geom, highway_type t FROM roads; 
-    -- ST_SimplifyPreserveTopology(geometry geomA, float tolerance);
-    -- create table simple_noise_map as select ST_SIMPLIFYPRESERVETOPOLOGY(the_geom, 2) the_geom, idiso, CELL_ID from multipolygon_iso;
-    drop table if exists contouring_noise_map;
-    -- create table CONTOURING_NOISE_MAP as select ST_Transform(ST_SETSRID(the_geom,{0}),{1}),idiso, CELL_ID from ST_Explode('simple_noise_map'); 
-    create table CONTOURING_NOISE_MAP as select ST_Transform(ST_SETSRID(the_geom,{0}),{1}),idiso, CELL_ID from ST_Explode('multipolygon_iso'); 
-    drop table multipolygon_iso;""".format(
-            25832, 4326
-        )
-    )
+    cursor.execute(queries.RESET_TRICONTOURING_MAP)
 
     # export result from database to geojson
     # time_stamp = str(datetime.now()).split('.', 1)[0].replace(' ', '_').replace(':', '_')
