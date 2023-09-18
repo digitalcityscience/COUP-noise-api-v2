@@ -14,7 +14,7 @@ class RedisConnectionConfig(BaseSettings):
 
 class CacheRedis(BaseSettings):
     connection: RedisConnectionConfig = Field(default_factory=RedisConnectionConfig)
-    key_prefix: str = "water_simulations"
+    key_prefix: str = "noise_simulations"
     ttl_days: int = Field(30, env="REDIS_CACHE_TTL_DAYS")
 
     @property
