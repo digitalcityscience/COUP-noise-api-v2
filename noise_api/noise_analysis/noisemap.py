@@ -1,12 +1,12 @@
-from __future__ import print_function
-
 import json
 import logging
 import os
 import shlex
 import subprocess
 from pathlib import Path
-from time import sleep
+
+import psycopg2
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from noise_api.noise_analysis import queries
 from noise_api.noise_analysis.sql_query_builder import (
@@ -32,53 +32,43 @@ class H2DatabaseContextManager:
     def __exit__(self, exc_type, exc_value, traceback):
         self.cleanup()
 
+    @retry(
+        stop=stop_after_attempt(4),
+        wait=wait_fixed(5),
+        retry=retry_if_exception_type(ImportError),
+    )
     def boot_h2_database_in_subprocess(self):
-        java_command = (
+        args = shlex.split(
             'java -cp "bin/*:bundle/*:sys-bundle/*" org.h2.tools.Server -pg -trace'
         )
-
-        args = shlex.split(java_command)
         f = open("log.txt", "w+")
         p = subprocess.Popen(args, cwd=ORBISGIS_DIR, stdout=f)
         print("ProcessID H2-database ", p.pid)
 
-        # Allow time for database booting
-        sleep(2)
+        try:
+            import psycopg2
 
-        # Database process is running
-        import_tries = 0
-        while p.poll() is None:
-            try:
-                import psycopg2
-            except ImportError:
-                print("Could not connect to database.")
-                print("Trying again in 5 seconds")
-                sleep(5)
-                import_tries += 1
-            else:
-                print("Successfully imported psycopg2")
-                return p, psycopg2
-            finally:
-                if import_tries > 4:
-                    stdout, stderr = p.communicate()
-                    print("Could not import psycopg2, trouble with database process")
-                    print(stdout, stderr)
-                    p.terminate()
+            return p, psycopg2
+        except ImportError as e:
+            stdout, stderr = p.communicate()
+            logger.warn("Could not connect to database.")
+            logger.warn(stdout, stderr)
+            p.terminate()
+            raise e
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(2),
+        retry=retry_if_exception_type(psycopg2.OperationalError),
+    )
     def initiate_database_connection(self, psycopg2):
-        # Define our connection string
         # DB name has to be an absolute path
         conn_string = (
             f"host='localhost' port=5435 dbname='{DB_NAME}' user='sa' password='sa'"
         )
-
-        # Print the connection string we will use to connect
         print("Connecting to database\n ->%s" % (conn_string))
 
-        # Get a connection, if a connect cannot be made an exception will be raised here
         conn = psycopg2.connect(conn_string)
-
-        # conn.cursor will return a cursor object, you can use this cursor to perform queries
         cursor = conn.cursor()
         print("Connected!\n")
 
@@ -182,7 +172,6 @@ def calculate_noise_result(
 
 def run_noise_calculation(task_def: dict):
     with H2DatabaseContextManager() as h2_context:
-        # get noise result as json
         noise_result_geojson = calculate_noise_result(
             h2_context.psycopg2_cursor,
             {
