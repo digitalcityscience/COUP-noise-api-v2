@@ -3,40 +3,8 @@ pydantic[email]==1.10.12
 uvicorn==0.23.0
 celery[redis]==5.3.1
 flower==2.0.0
-
 psycopg2-binary==2.9.6
-
 geopandas==0.13.2
 rasterio==1.3.8
 geomet==1.0.0
-# jinjasql==0.1.8
-# pydantic-geojson==0.1.1
-
-# Fiona
-# geomet
-# billiard
-# amqp
-# kombu
-# kiwisolver
-# matplotlib
-# munch
-# numpy
-# packaging
-# pandas
-# Pillow
-# psycopg2-binary
-# pygeos
-# pyparsing
-# pyproj
-# pyshp
-# python-dateutil
-# rasterio
-# redis
-# requests
-# rioxarray
-# scipy
-# Shapely
-# urllib3
-# visvalingamwyatt
-# Werkzeug
-# xarray
+tenacity==8.2.3
