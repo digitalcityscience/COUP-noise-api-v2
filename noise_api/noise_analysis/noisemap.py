@@ -57,7 +57,7 @@ class H2DatabaseContextManager:
             raise e
 
     @retry(
-        stop=stop_after_attempt(3),
+        stop=stop_after_attempt(6),
         wait=wait_fixed(2),
         retry=retry_if_exception_type(psycopg2.OperationalError),
     )
