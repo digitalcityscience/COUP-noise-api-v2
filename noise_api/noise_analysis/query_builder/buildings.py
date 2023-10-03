@@ -7,8 +7,9 @@ def merge_adjacent_buildings(geo_json):
     polygons = []
     for feature in geo_json["features"]:
         if feature["geometry"]["type"] == "MultiPolygon":
-            for polygon in feature["geometry"]["coordinates"][0]:
-                polygons.append(Polygon(polygon))
+            polygons.extend(
+                Polygon(polygon) for polygon in feature["geometry"]["coordinates"][0]
+            )
         else:
             polygons.append(Polygon(feature["geometry"]["coordinates"][0]))
     return {
