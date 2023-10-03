@@ -61,7 +61,7 @@ def make_building_queries(buildings_geojson):
                         return ""
                     # create a string containing a list of coordinates lists per linestring
                     #   ('PolygonWithHole', 'POLYGON((0 0, 10 0, 10 10, 0 10, 0 0),(1 1, 1 2, 2 2, 2 1, 1 1))'),
-                    polygon_string += "(" + line_string_coordinates + "),"
+                    polygon_string += f"({line_string_coordinates}),"
             else:
                 # only one linestring in polygon (i.e. no holes)
                 line_string_coordinates = ""
@@ -85,10 +85,10 @@ def make_building_queries(buildings_geojson):
                     print(feature)
                     return ""
                 # create a string containing a list of coordinates lists per linestring
-                polygon_string += "(" + line_string_coordinates + "),"
+                polygon_string += f"({line_string_coordinates}),"
             # remove trailing comma of last line string
             polygon_string = polygon_string[:-1]
-            sql_insert_string = "'POLYGON (" + polygon_string + ")'"
+            sql_insert_string = f"'POLYGON ({polygon_string})'"
             sql_insert_strings_all_buildings.append(sql_insert_string)
 
     return sql_insert_strings_all_buildings
