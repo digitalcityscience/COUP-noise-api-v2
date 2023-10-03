@@ -185,13 +185,30 @@ RESET_TRICONTOURING_MAP = """
 )
 
 RESET_ROADS_GLOBAL_TABLE = """
-    drop table if exists roads_src_global;
-    CREATE TABLE roads_src_global AS SELECT the_geom,
-    CASEWHEN(
-        road_type = 99,
-        BTW_EvalSource(train_speed, trains_per_hour, ground_type, has_anti_vibration),
-        BR_EvalSource(load_speed,lightVehicleCount,heavyVehicleCount,junction_speed,max_speed,road_type,ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),1)),ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),2)),ST_Length(the_geom),False)
-        ) as db_m from roads_geo_and_traffic;
+    DROP TABLE IF EXISTS roads_src_global;
+    CREATE TABLE roads_src_global AS
+        SELECT the_geom,
+               CASEWHEN(
+                    road_type = 99,
+                    BTW_EvalSource(
+                        train_speed,
+                        trains_per_hour,
+                        ground_type,
+                        has_anti_vibration),
+                    BR_EvalSource(
+                        load_speed,
+                        lightVehicleCount,
+                        heavyVehicleCount,
+                        junction_speed,
+                        max_speed,
+                        road_type,
+                        ST_Z(
+                            ST_GeometryN(ST_ToMultiPoint(the_geom),1)),
+                            ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),2)),
+                            ST_Length(the_geom),
+                            False)
+        ) AS db_m
+        FROM roads_geo_and_traffic;
 """
 
 RESET_ROADS_SRC_TABLE = """
