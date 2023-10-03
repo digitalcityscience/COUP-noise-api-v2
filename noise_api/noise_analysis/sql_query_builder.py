@@ -3,9 +3,10 @@ import os
 
 import numpy
 from geomet import wkt
-from shapely.geometry import Polygon, mapping
-from shapely.ops import cascaded_union
 
+from noise_api.noise_analysis.query_builder.common import (
+    add_third_dimension_to_features,
+)
 from noise_api.noise_analysis.road_info import RoadInfo
 
 cwd = os.path.dirname(os.path.abspath(__file__))
@@ -211,97 +212,6 @@ def get_traffic_queries():
     return sql_insert_strings_noisy_roads
 
 
-# get sql queries for the buildings
-def make_building_queries(buildings_geojson):
-    # A multipolygon containing all buildings
-    buildings = merge_adjacent_buildings(buildings_geojson)
-    sql_insert_strings_all_buildings = []
-
-    for feature in buildings["features"]:
-        if "coordinates" not in feature["geometry"]:
-            continue
-        for polygon in feature["geometry"]["coordinates"]:
-            polygon_string = ""
-            if not isinstance(polygon[0][0], float):
-                # multiple line strings in polygon (i.e. has holes)
-                for coordinates_list in polygon:
-                    line_string_coordinates = ""
-                    try:
-                        for coordinate_pair in coordinates_list:
-                            # append 0 to all coordinates for mock third dimension
-                            coordinate_string = (
-                                str(coordinate_pair[0])
-                                + " "
-                                + str(coordinate_pair[1])
-                                + " "
-                                + str(0)
-                                + ","
-                            )
-                            line_string_coordinates += coordinate_string
-                            # remove trailing comma of last coordinate
-                        line_string_coordinates = line_string_coordinates[:-1]
-                    except Exception as e:
-                        print("invalid json")
-                        print(e)
-                        print(
-                            coordinates_list,
-                            coordinate_pair,
-                            len(polygon[0]),
-                            polygon[0],
-                        )
-                        print(feature)
-                        exit()
-                        return ""
-                    # create a string containing a list of coordinates lists per linestring
-                    #   ('PolygonWithHole', 'POLYGON((0 0, 10 0, 10 10, 0 10, 0 0),(1 1, 1 2, 2 2, 2 1, 1 1))'),
-                    polygon_string += "(" + line_string_coordinates + "),"
-            else:
-                # only one linestring in polygon (i.e. no holes)
-                line_string_coordinates = ""
-                try:
-                    for coordinate_pair in polygon:
-                        # append 0 to all coordinates for mock third dimension
-                        coordinate_string = (
-                            str(coordinate_pair[0])
-                            + " "
-                            + str(coordinate_pair[1])
-                            + " "
-                            + str(0)
-                            + ","
-                        )
-                        line_string_coordinates += coordinate_string
-                        # remove trailing comma of last coordinate
-                    line_string_coordinates = line_string_coordinates[:-1]
-                except Exception as e:
-                    print("invalid json")
-                    print(e)
-                    print(feature)
-                    return ""
-                # create a string containing a list of coordinates lists per linestring
-                polygon_string += "(" + line_string_coordinates + "),"
-            # remove trailing comma of last line string
-            polygon_string = polygon_string[:-1]
-            sql_insert_string = "'POLYGON (" + polygon_string + ")'"
-            sql_insert_strings_all_buildings.append(sql_insert_string)
-
-    return sql_insert_strings_all_buildings
-
-
-# merges adjacent buildings and creates a multipolygon containing all buildings
-def merge_adjacent_buildings(geo_json):
-    polygons = []
-    for feature in geo_json["features"]:
-        if feature["geometry"]["type"] == "MultiPolygon":
-            for polygon in feature["geometry"]["coordinates"][0]:
-                polygons.append(Polygon(polygon))
-        else:
-            polygons.append(Polygon(feature["geometry"]["coordinates"][0]))
-    return {
-        "type": "FeatureCollection",
-        "features": [{"geometry": mapping(cascaded_union(polygons)), "properties": {}}],
-    }
-
-
 # create nodes for all roads - nodes are connection points of roads
 def create_nodes(all_roads):
     nodes = []
@@ -355,23 +265,3 @@ def get_insert_query_for_road(road, nodes):
         )
     )
     return sql_insert_string
-
-
-def add_third_dimension_to_features(features):
-    for feature in features:
-        if feature["geometry"]["type"] == "LineString":
-            add_third_dimension_to_line_feature(feature)
-        if feature["geometry"]["type"] == "MultiLineString":
-            add_third_dimension_to_multi_line_feature(feature)
-        # TODO use this for buildings as well
-
-
-def add_third_dimension_to_multi_line_feature(feature):
-    for pointList in feature["geometry"]["coordinates"]:
-        for point in pointList:
-            point.append(0)
-
-
-def add_third_dimension_to_line_feature(feature):
-    for point in feature["geometry"]["coordinates"]:
-        point.append(0)

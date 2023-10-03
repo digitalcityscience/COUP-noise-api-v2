@@ -9,10 +9,10 @@ import psycopg2
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from noise_api.noise_analysis import queries
+from noise_api.noise_analysis.query_builder.buildings import make_building_queries
 from noise_api.noise_analysis.sql_query_builder import (
     get_road_queries,
     get_traffic_queries,
-    make_building_queries,
     reset_all_roads,
 )
 
