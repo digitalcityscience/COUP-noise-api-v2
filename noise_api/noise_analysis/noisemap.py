@@ -72,6 +72,8 @@ class H2DatabaseContextManager:
         cursor = conn.cursor()
         print("Connected!\n")
 
+        cursor.execute(queries.H2GIS_SPATIAL)
+
         # Initialize NoiseModelling functions
         for alias_name, function_name in queries.FUNCTIONS_TO_INIT:
             cursor.execute(
@@ -80,8 +82,6 @@ class H2DatabaseContextManager:
                     func=function_name,
                 )
             )
-
-        cursor.execute("CALL H2GIS_SPATIAL();")
 
         return conn, cursor
 
@@ -127,21 +127,20 @@ def calculate_noise_result(
 
     reset_all_roads()
 
-    cursor.execute(queries.RESET_BUILDINGS_TABLE)
-    cursor.execute(queries.RESET_ROADS_GEOM_TABLE)
-    cursor.execute(queries.RESET_ROADS_TRAFFIC_TABLE)
-
     print("Making buildings table ...")
+    cursor.execute(queries.RESET_BUILDINGS_TABLE)
     buildings_queries = make_building_queries(buildings_geojson)
     for building in buildings_queries:
         cursor.execute(queries.INSERT_BUILDING.substitute(building=building))
 
     print("Making roads table ...")
+    cursor.execute(queries.RESET_ROADS_GEOM_TABLE)
     roads_queries = get_road_queries(traffic_settings, roads_geojson)
     for road in roads_queries:
         cursor.execute("""{0}""".format(road))
 
     print("Making traffic information table ...")
+    cursor.execute(queries.RESET_ROADS_TRAFFIC_TABLE)
     traffic_queries = get_traffic_queries()
     for traffic_query in traffic_queries:
         cursor.execute("""{0}""".format(traffic_query))

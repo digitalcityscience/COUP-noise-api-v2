@@ -4,10 +4,15 @@ from noise_api.config import settings
 
 # TODO do not use template here, but for now before finding best approach
 
-CREATE_ALIAS = Template("""CREATE ALIAS IF NOT EXISTS $alias FOR \"$func\";""")
+
+H2GIS_SPATIAL = """
+CREATE ALIAS IF NOT EXISTS H2GIS_SPATIAL FOR "org.h2gis.functions.factory.H2GISFunctions.load";
+CALL H2GIS_SPATIAL();
+"""
+
+CREATE_ALIAS = Template('CREATE ALIAS IF NOT EXISTS $alias FOR "$func";')
 
 FUNCTIONS_TO_INIT = [
-    ("H2GIS_SPATIAL", "org.h2gis.functions.factory.H2GISFunctions.load"),
     ("BR_PtGrid3D", "org.orbisgis.noisemap.h2.BR_PtGrid3D.noisePropagation"),
     ("BR_PtGrid", "org.orbisgis.noisemap.h2.BR_PtGrid.noisePropagation"),
     (
@@ -81,7 +86,6 @@ RESET_ROADS_TRAFFIC_TABLE = """
 RESET_ROADS_DIR_TABLES = """
     DROP TABLE IF EXISTS roads_dir_one;
     DROP TABLE IF EXISTS roads_dir_two;
-    DROP TABLE IF EXISTS roads_geo_and_traffic;
 
     CREATE TABLE roads_dir_one AS
         SELECT
@@ -123,6 +127,7 @@ RESET_ROADS_DIR_TABLES = """
         AND
             geo.node_from = traff.node_to;
 
+    DROP TABLE IF EXISTS roads_geo_and_traffic;
     CREATE TABLE roads_geo_and_traffic AS
         SELECT
             *
@@ -180,25 +185,13 @@ RESET_TRICONTOURING_MAP = """
 )
 
 RESET_ROADS_GLOBAL_TABLE = """
-    DROP TABLE IF EXISTS roads_src_global;
-    CREATE TABLE roads_src_global AS
-        SELECT
-            the_geom,
-        CASEWHEN(
-            road_type = 99,
-            BTW_EvalSource(train_speed, trains_per_hour, ground_type, has_anti_vibration),
-            BR_EvalSource(
-                load_speed,
-                lightVehicleCount,
-                heavyVehicleCount,
-                junction_speed,
-                max_speed,
-                road_type,
-                ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom), 1)),
-                ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom), 2)),
-                ST_Length(the_geom),
-                False) as db_m
-        FROM roads_geo_and_traffic;
+    drop table if exists roads_src_global;
+    CREATE TABLE roads_src_global AS SELECT the_geom,
+    CASEWHEN(
+        road_type = 99,
+        BTW_EvalSource(train_speed, trains_per_hour, ground_type, has_anti_vibration),
+        BR_EvalSource(load_speed,lightVehicleCount,heavyVehicleCount,junction_speed,max_speed,road_type,ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),1)),ST_Z(ST_GeometryN(ST_ToMultiPoint(the_geom),2)),ST_Length(the_geom),False)
+        ) as db_m from roads_geo_and_traffic;
 """
 
 RESET_ROADS_SRC_TABLE = """
