@@ -7,6 +7,7 @@ import shlex
 import subprocess
 from pathlib import Path
 from time import sleep
+import geopandas as gpd
 
 from noise_api.noise_analysis import queries
 from noise_api.noise_analysis.sql_query_builder import (
@@ -125,12 +126,20 @@ def initiate_database_connection(psycopg2):
     return conn, cursor
 
 
+def reproject_geojson_to_metric_crs(geojson_wgs: dict) -> dict:
+    gdf_wgs = gpd.GeoDataFrame.from_features(geojson_wgs)
+    gdf_wgs = gdf_wgs.set_crs("EPSG:4326", allow_override=True)
+
+    return json.loads(gdf_wgs.to_crs("EPSG:25832").to_json())
+    
+
 def calculate_noise_result(
     cursor, traffic_settings, buildings_geojson, roads_geojson
 ) -> dict:
-    # Scenario sample
-    # Sending/Receiving geometry data using odbc connection is very slow
-    # It is advised to use shape file or other storage format, so use SHPREAD or FILETABLE sql functions
+
+    # reproject input geojsons to local metric crs
+    buildings_geojson = reproject_geojson_to_metric_crs(buildings_geojson)
+    roads_geojson = reproject_geojson_to_metric_crs(roads_geojson)
 
     print("make buildings table ..")
 
