@@ -9,8 +9,12 @@ import psycopg2
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from noise_api.noise_analysis import queries
-from noise_api.noise_analysis.query_builder.buildings import make_building_queries
+from noise_api.noise_analysis.geo_helpers import (
+    all_z_values_to_zero,
+    geojson_to_gdf_with_metric_crs,
+)
 from noise_api.noise_analysis.sql_query_builder import (
+    get_buildings_geom_as_wkt,
     get_road_queries,
     get_traffic_queries,
     reset_all_roads,
@@ -121,21 +125,25 @@ def export_result_from_db_to_geojson(cursor):
 def calculate_noise_result(
     cursor, traffic_settings, buildings_geojson, roads_geojson
 ) -> dict:
-    # Scenario sample
-    # Sending/Receiving geometry data using odbc connection is very slow
-    # It is advised to use shape file or other storage format, so use SHPREAD or FILETABLE sql functions
+    # reproject input geojsons to local metric crs
+    # TODO: all coordinates for roads and buildings are currently set to z level 0
+    # TODO when upgrading to new noise version, that has proper 3D implementation- we should change this.
+    buildings_gdf = all_z_values_to_zero(geojson_to_gdf_with_metric_crs(buildings_geojson))
+    roads_gdf = all_z_values_to_zero(geojson_to_gdf_with_metric_crs(roads_geojson))
 
-    reset_all_roads()
+    print("make buildings table ..")
 
-    print("Making buildings table ...")
     cursor.execute(queries.RESET_BUILDINGS_TABLE)
-    buildings_queries = make_building_queries(buildings_geojson)
-    for building in buildings_queries:
-        cursor.execute(queries.INSERT_BUILDING.substitute(building=building))
+    cursor.execute(
+        queries.INSERT_BUILDING.substitute(
+            building=get_buildings_geom_as_wkt(buildings_gdf)
+        )
+    )
 
-    print("Making roads table ...")
+    print("Make roads table (just geometries and road type)..")
+    reset_all_roads()
     cursor.execute(queries.RESET_ROADS_GEOM_TABLE)
-    roads_queries = get_road_queries(traffic_settings, roads_geojson)
+    roads_queries = get_road_queries(traffic_settings, roads_gdf)
     for road in roads_queries:
         cursor.execute("""{0}""".format(road))
 

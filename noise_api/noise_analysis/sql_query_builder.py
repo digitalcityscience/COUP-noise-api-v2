@@ -1,18 +1,13 @@
 import json
 import os
 
+import geopandas as gpd
 import numpy
 from geomet import wkt
 
-from noise_api.noise_analysis.query_builder.common import (
-    add_third_dimension_to_features,
-)
 from noise_api.noise_analysis.road_info import RoadInfo
 
 cwd = os.path.dirname(os.path.abspath(__file__))
-
-# TODO: all coordinates for roads and buildings are currently set to z level 0
-
 
 # road_type_ids from IffStar NoiseModdeling
 road_types_iffstar_noise_modelling = {
@@ -91,12 +86,12 @@ def apply_traffic_settings_to_design_roads(design_roads, traffic_settings):
     return design_roads
 
 
-def get_road_queries(traffic_settings, roads_geojson):
+def get_road_queries(traffic_settings, roads_gdf):
+    roads_geojson = json.loads(roads_gdf.to_json())
     roads_geojson = apply_traffic_settings_to_design_roads(
         roads_geojson, traffic_settings
     )
     road_features = roads_geojson["features"]
-    add_third_dimension_to_features(road_features)
 
     for feature in road_features:
         id = feature["properties"]["id"]
@@ -212,6 +207,15 @@ def get_traffic_queries():
     return sql_insert_strings_noisy_roads
 
 
+# returns a wkt string for a multipolygon containing all buildings
+def get_buildings_geom_as_wkt(buildings_gdf: gpd.GeoDataFrame) -> str:
+    # simplify complex geometries to speed up calculation and avoid hickups with spatial db.
+    buildings_gdf.geometry = buildings_gdf.geometry.simplify(0.1)
+
+    # calculation of noise results is 5sec. faster if building geometries are provided as single multipolygon
+    return f"'{buildings_gdf.geometry.unary_union}'"
+
+
 # create nodes for all roads - nodes are connection points of roads
 def create_nodes(all_roads):
     nodes = []
@@ -264,4 +268,5 @@ def get_insert_query_for_road(road, nodes):
             road.get_road_type_for_query(),
         )
     )
+
     return sql_insert_string
