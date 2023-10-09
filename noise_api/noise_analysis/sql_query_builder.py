@@ -5,7 +5,7 @@ import numpy
 from geomet import wkt
 import geopandas as gpd
 from shapely.geometry import Polygon, mapping
-from shapely.ops import cascaded_union
+from shapely.ops import unary_union
 
 from noise_api.noise_analysis.road_info import RoadInfo
 
@@ -262,7 +262,7 @@ def merge_adjacent_buildings(geo_json):
             polygons.append(Polygon(feature["geometry"]["coordinates"][0]))
     return {
         "type": "FeatureCollection",
-        "features": [{"geometry": mapping(cascaded_union(polygons)), "properties": {}}],
+        "features": [{"geometry": mapping(unary_union(polygons)), "properties": {}}],
     }
 
 
