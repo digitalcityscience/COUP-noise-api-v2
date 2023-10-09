@@ -7,13 +7,16 @@ import shlex
 import subprocess
 from pathlib import Path
 from time import sleep
-import geopandas as gpd
 
 from noise_api.noise_analysis import queries
+from noise_api.noise_analysis.geo_helpers import (
+    all_z_values_to_zero,
+    geojson_to_gdf_with_metric_crs,
+)
 from noise_api.noise_analysis.sql_query_builder import (
+    get_buildings_geom_as_wkt,
     get_road_queries,
     get_traffic_queries,
-    make_building_queries,
     reset_all_roads,
 )
 
@@ -126,35 +129,27 @@ def initiate_database_connection(psycopg2):
     return conn, cursor
 
 
-def reproject_geojson_to_metric_crs(geojson_wgs: dict) -> dict:
-    gdf_wgs = gpd.GeoDataFrame.from_features(geojson_wgs)
-    gdf_wgs = gdf_wgs.set_crs("EPSG:4326", allow_override=True)
-
-    return json.loads(gdf_wgs.to_crs("EPSG:25832").to_json())
-    
-
 def calculate_noise_result(
     cursor, traffic_settings, buildings_geojson, roads_geojson
 ) -> dict:
-
     # reproject input geojsons to local metric crs
-    buildings_geojson = reproject_geojson_to_metric_crs(buildings_geojson)
-    roads_geojson = reproject_geojson_to_metric_crs(roads_geojson)
+    # TODO: all coordinates for roads and buildings are currently set to z level 0
+    # TODO when upgrading to new noise version, that has proper 3D implementation- we should change this.
+    buildings_gdf = all_z_values_to_zero(geojson_to_gdf_with_metric_crs(buildings_geojson))
+    roads_gdf = all_z_values_to_zero(geojson_to_gdf_with_metric_crs(roads_geojson))
 
     print("make buildings table ..")
-
-    reset_all_roads()
-
     cursor.execute(queries.RESET_BUILDINGS_TABLE)
-
-    buildings_geoms = get_building_geoms_wkt(buildings_geojson)
-    for geom in buildings_geoms:
-        # Inserting building into database
-        cursor.execute(queries.INSERT_BUILDING.substitute(building=geom))
+    cursor.execute(
+        queries.INSERT_BUILDING.substitute(
+            building=get_buildings_geom_as_wkt(buildings_gdf)
+        )
+    )
 
     print("Make roads table (just geometries and road type)..")
+    reset_all_roads()
     cursor.execute(queries.RESET_ROADS_GEOM_TABLE)
-    roads_queries = get_road_queries(traffic_settings, roads_geojson)
+    roads_queries = get_road_queries(traffic_settings, roads_gdf)
     for road in roads_queries:
         # print('road:', road)
         cursor.execute("""{0}""".format(road))

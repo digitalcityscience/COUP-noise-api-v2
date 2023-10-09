@@ -1,18 +1,13 @@
 import json
 import os
 
+import geopandas as gpd
 import numpy
 from geomet import wkt
-import geopandas as gpd
-from shapely.geometry import Polygon, mapping
-from shapely.ops import unary_union
 
 from noise_api.noise_analysis.road_info import RoadInfo
 
 cwd = os.path.dirname(os.path.abspath(__file__))
-
-# TODO: all coordinates for roads and buildings are currently set to z level 0
-
 
 # road_type_ids from IffStar NoiseModdeling
 road_types_iffstar_noise_modelling = {
@@ -91,12 +86,12 @@ def apply_traffic_settings_to_design_roads(design_roads, traffic_settings):
     return design_roads
 
 
-def get_road_queries(traffic_settings, roads_geojson):
+def get_road_queries(traffic_settings, roads_gdf):
+    roads_geojson = json.loads(roads_gdf.to_json())
     roads_geojson = apply_traffic_settings_to_design_roads(
         roads_geojson, traffic_settings
     )
     road_features = roads_geojson["features"]
-    add_third_dimension_to_features(road_features)
 
     for feature in road_features:
         id = feature["properties"]["id"]
@@ -212,58 +207,13 @@ def get_traffic_queries():
     return sql_insert_strings_noisy_roads
 
 
-# get sql queries for the buildings
-def get_building_geoms_wkt(buildings_geojson):
-
-    # TODO once the calculation works we should test
-    # 1) do not merge buildings, what happens?
-    # A multipolygon containing all buildings
-    buildings = merge_adjacent_buildings(buildings_geojson)
-
-    buildings_gdf = gpd.GeoDataFrame.from_features(buildings["features"])
+# returns a wkt string for a multipolygon containing all buildings
+def get_buildings_geom_as_wkt(buildings_gdf: gpd.GeoDataFrame) -> str:
     # simplify complex geometries to speed up calculation and avoid hickups with spatial db.
     buildings_gdf.geometry = buildings_gdf.geometry.simplify(0.1)
 
-    # TODO once the calculation works we should test
-    # 2) do not add Z value for geometries of buildings and roads, what happens?
-
-    def reset_z_value(geometry):
-        """
-        Reset the Z value of each coordinate of the given geometry to 0.
-        """
-        if isinstance(geometry, Polygon):
-            exterior = [(x, y, 0) for x, y, z in list(geometry.exterior.coords)]
-
-            interiors = []
-            for interior in geometry.interiors:
-                interiors.append([(x, y, 0) for x, y, z in list(interior.coords)])
-
-            return Polygon(exterior, holes=interiors)
-
-        return geometry  # Return original geometry for non-polygon types
-
-    # Apply the function to reset Z-values
-    buildings_gdf['geometry'] = buildings_gdf['geometry'].apply(reset_z_value)
-
-    wkt_strings = buildings_gdf.geometry.astype(str).tolist()
-    wkt_strings = [f"'{wkt_str}'" for wkt_str in wkt_strings]
-
-    return wkt_strings
-
-
-# merges adjacent buildings and creates a multipolygon containing all buildings
-def merge_adjacent_buildings(geo_json):
-    polygons = []
-    for feature in geo_json["features"]:
-        if feature["geometry"]["type"] == "MultiPolygon":
-            for polygon in feature["geometry"]["coordinates"][0]:
-                polygons.append(Polygon(polygon))
-        else:
-            polygons.append(Polygon(feature["geometry"]["coordinates"][0]))
-    return {
-        "type": "FeatureCollection",
-        "features": [{"geometry": mapping(unary_union(polygons)), "properties": {}}],
-    }
+    # calculation of noise results is 5sec. faster if building geometries are provided as single multipolygon
+    return f"'{buildings_gdf.geometry.unary_union}'"
 
 
 # create nodes for all roads - nodes are connection points of roads
@@ -319,23 +269,3 @@ def get_insert_query_for_road(road, nodes):
         )
     )
     return sql_insert_string
-
-
-def add_third_dimension_to_features(features):
-    for feature in features:
-        if feature["geometry"]["type"] == "LineString":
-            add_third_dimension_to_line_feature(feature)
-        if feature["geometry"]["type"] == "MultiLineString":
-            add_third_dimension_to_multi_line_feature(feature)
-        # TODO use this for buildings as well
-
-
-def add_third_dimension_to_multi_line_feature(feature):
-    for pointList in feature["geometry"]["coordinates"]:
-        for point in pointList:
-            point.append(0)
-
-
-def add_third_dimension_to_line_feature(feature):
-    for point in feature["geometry"]["coordinates"]:
-        point.append(0)
