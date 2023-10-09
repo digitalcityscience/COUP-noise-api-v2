@@ -138,11 +138,10 @@ def calculate_noise_result(
 
     cursor.execute(queries.RESET_BUILDINGS_TABLE)
 
-    buildings_queries = make_building_queries(buildings_geojson)
-    for building in buildings_queries:
-        # print('building:', building)
+    buildings_geoms = get_building_geoms_wkt(buildings_geojson)
+    for geom in buildings_geoms:
         # Inserting building into database
-        cursor.execute(queries.INSERT_BUILDING.substitute(building=building))
+        cursor.execute(queries.INSERT_BUILDING.substitute(building=geom))
 
     print("Make roads table (just geometries and road type)..")
     cursor.execute(queries.RESET_ROADS_GEOM_TABLE)

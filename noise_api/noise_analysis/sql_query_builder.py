@@ -3,6 +3,7 @@ import os
 
 import numpy
 from geomet import wkt
+import geopandas as gpd
 from shapely.geometry import Polygon, mapping
 from shapely.ops import cascaded_union
 
@@ -212,79 +213,42 @@ def get_traffic_queries():
 
 
 # get sql queries for the buildings
-def make_building_queries(buildings_geojson):
+def get_building_geoms_wkt(buildings_geojson):
+
+    # TODO once the calculation works we should test
+    # 1) do not merge buildings, what happens?
     # A multipolygon containing all buildings
     buildings = merge_adjacent_buildings(buildings_geojson)
-    sql_insert_strings_all_buildings = []
 
-    for feature in buildings["features"]:
-        if "coordinates" not in feature["geometry"]:
-            continue
-        for polygon in feature["geometry"]["coordinates"]:
-            polygon_string = ""
-            if not isinstance(polygon[0][0], float):
-                # multiple line strings in polygon (i.e. has holes)
-                for coordinates_list in polygon:
-                    line_string_coordinates = ""
-                    try:
-                        for coordinate_pair in coordinates_list:
-                            # append 0 to all coordinates for mock third dimension
-                            coordinate_string = (
-                                str(coordinate_pair[0])
-                                + " "
-                                + str(coordinate_pair[1])
-                                + " "
-                                + str(0)
-                                + ","
-                            )
-                            line_string_coordinates += coordinate_string
-                            # remove trailing comma of last coordinate
-                        line_string_coordinates = line_string_coordinates[:-1]
-                    except Exception as e:
-                        print("invalid json")
-                        print(e)
-                        print(
-                            coordinates_list,
-                            coordinate_pair,
-                            len(polygon[0]),
-                            polygon[0],
-                        )
-                        print(feature)
-                        exit()
-                        return ""
-                    # create a string containing a list of coordinates lists per linestring
-                    #   ('PolygonWithHole', 'POLYGON((0 0, 10 0, 10 10, 0 10, 0 0),(1 1, 1 2, 2 2, 2 1, 1 1))'),
-                    polygon_string += "(" + line_string_coordinates + "),"
-            else:
-                # only one linestring in polygon (i.e. no holes)
-                line_string_coordinates = ""
-                try:
-                    for coordinate_pair in polygon:
-                        # append 0 to all coordinates for mock third dimension
-                        coordinate_string = (
-                            str(coordinate_pair[0])
-                            + " "
-                            + str(coordinate_pair[1])
-                            + " "
-                            + str(0)
-                            + ","
-                        )
-                        line_string_coordinates += coordinate_string
-                        # remove trailing comma of last coordinate
-                    line_string_coordinates = line_string_coordinates[:-1]
-                except Exception as e:
-                    print("invalid json")
-                    print(e)
-                    print(feature)
-                    return ""
-                # create a string containing a list of coordinates lists per linestring
-                polygon_string += "(" + line_string_coordinates + "),"
-            # remove trailing comma of last line string
-            polygon_string = polygon_string[:-1]
-            sql_insert_string = "'POLYGON (" + polygon_string + ")'"
-            sql_insert_strings_all_buildings.append(sql_insert_string)
+    buildings_gdf = gpd.GeoDataFrame.from_features(buildings["features"])
+    # simplify complex geometries to speed up calculation and avoid hickups with spatial db.
+    buildings_gdf.geometry = buildings_gdf.geometry.simplify(0.1)
 
-    return sql_insert_strings_all_buildings
+    # TODO once the calculation works we should test
+    # 2) do not add Z value for geometries of buildings and roads, what happens?
+
+    def reset_z_value(geometry):
+        """
+        Reset the Z value of each coordinate of the given geometry to 0.
+        """
+        if isinstance(geometry, Polygon):
+            exterior = [(x, y, 0) for x, y, z in list(geometry.exterior.coords)]
+
+            interiors = []
+            for interior in geometry.interiors:
+                interiors.append([(x, y, 0) for x, y, z in list(interior.coords)])
+
+            return Polygon(exterior, holes=interiors)
+
+        return geometry  # Return original geometry for non-polygon types
+
+    # Apply the function to reset Z-values
+    buildings_gdf['geometry'] = buildings_gdf['geometry'].apply(reset_z_value)
+
+    wkt_strings = buildings_gdf.geometry.astype(str).tolist()
+    wkt_strings = [f"'{wkt_str}'" for wkt_str in wkt_strings]
+
+    return wkt_strings
 
 
 # merges adjacent buildings and creates a multipolygon containing all buildings
