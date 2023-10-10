@@ -236,7 +236,6 @@ RESET_ROADS_SRC_TABLE = """
         FROM roads_src_global
 """
 
-
 RESET_ROADS_GEOM_TABLE = """
     DROP TABLE IF EXISTS roads_geom;
     CREATE TABLE roads_geom (

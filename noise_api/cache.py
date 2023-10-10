@@ -1,8 +1,8 @@
 import json
 
-import redis
 from fastapi.encoders import jsonable_encoder
 
+import redis
 from noise_api.config import RedisConnectionConfig
 
 
