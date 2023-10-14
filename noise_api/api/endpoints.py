@@ -1,6 +1,6 @@
 import logging
 
-from celery.result import AsyncResult, GroupResult
+from celery.result import AsyncResult
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["tasks"])
 
 
-@router.post("/task")
+@router.post("/tasks")
 async def process_task(
     calculation_input: NoiseCalculationInput,
 ):
@@ -46,22 +46,6 @@ async def get_task(task_id: str):
         response["result"] = async_result.get()
 
     return response
-
-
-@router.get("/grouptasks/{group_task_id}")
-def get_grouptask(group_task_id: str):
-    group_result = GroupResult.restore(group_task_id, app=celery_app)
-
-    # Fields available
-    # https://docs.celeryproject.org/en/stable/reference/celery.result.html#celery.result.ResultSet
-    return {
-        "grouptaskId": group_result.id,
-        "tasksCompleted": group_result.completed_count(),
-        "tasksTotal": len(group_result.results),
-        "grouptaskProcessed": group_result.ready(),
-        "grouptaskSucceeded": group_result.successful(),
-        "results": [result.get() for result in group_result.results if result.ready()],
-    }
 
 
 @router.get("/tasks/{task_id}/status")

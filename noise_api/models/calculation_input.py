@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Literal
 
 from pydantic import Field
 
@@ -16,13 +15,12 @@ class NoiseScenario(BaseModelStrict):
     traffic_quota: int = Field(
         ..., ge=0, le=100, description="Traffic quota in percent (0-100)"
     )
-    result_format: Literal["png", "geojson"] = "geojson"
-    # TODO: conversion and option should be implemented at the CUT API level
 
 
 class NoiseCalculationInput(NoiseScenario):
     buildings: dict
     roads: dict
+    result_format: str
 
     class Config:
         schema_extra = {
@@ -47,8 +45,7 @@ class NoiseTask(NoiseCalculationInput):
                 "traffic_settings": {
                     "max_speed": self.max_speed,
                     "traffic_quota": self.traffic_quota,
-                },
-                "result_format": self.result_format,
+                }
             }
         )
 

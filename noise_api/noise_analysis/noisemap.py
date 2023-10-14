@@ -128,7 +128,9 @@ def calculate_noise_result(
     # reproject input geojsons to local metric crs
     # TODO: all coordinates for roads and buildings are currently set to z level 0
     # TODO when upgrading to new noise version, that has proper 3D implementation- we should change this.
-    buildings_gdf = all_z_values_to_zero(geojson_to_gdf_with_metric_crs(buildings_geojson))
+    buildings_gdf = all_z_values_to_zero(
+        geojson_to_gdf_with_metric_crs(buildings_geojson)
+    )
     roads_gdf = all_z_values_to_zero(geojson_to_gdf_with_metric_crs(roads_geojson))
 
     print("make buildings table ..")
@@ -189,22 +191,6 @@ def run_noise_calculation(task_def: dict):
             task_def["roads"],
         )
 
-    # TODO remove user from here and investigate how to implement clipping
-    # cityPyo_user = ""
-
-    # noise_result_geojson = clip_gdf_to_project_area(noise_result_geojson, cityPyo_user)
-    # print("Result geojson save in ", noise_result_geojson)
-
-    # # close connections to database
-    # print("closing cursor")
-    # psycopg2_cursor.close()
-
-    # print("closing database connection")
-    # conn.close()
-
-    # # terminate database process as it constantly blocks memory
-    # h2_subprocess.terminate()
-
     # Try to make noise computation even faster
     # by adjustiong: https://github.com/Ifsttar/NoiseModelling/blob/master/noisemap-core/
     # src/main/java/org/orbisgis/noisemap/core/jdbc/JdbcNoiseMap.java#L30
@@ -215,4 +201,4 @@ def run_noise_calculation(task_def: dict):
     # if calculation_settings["result_format"] == "png":
     #     return convert_result_to_png(noise_result_geojson)
 
-    return noise_result_geojson
+    return {"result_format": task_def["result_format"], "geojson": noise_result_geojson}
