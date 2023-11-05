@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     description: str = Field(..., env="APP_DESCRIPTION")
     version: str = Field(..., env="APP_VERSION")
     debug: bool = Field(..., env="DEBUG")
+    log_level: Optional[Literal["DEBUG", "INFO"]] = Field("INFO", env="LOG_LEVEL")
     environment: Optional[Literal["LOCALDEV", "PROD"]] = Field(..., env="ENVIRONMENT")
     cache: CacheRedis = Field(default_factory=CacheRedis)
     broker: BrokerCelery = Field(default_factory=BrokerCelery)

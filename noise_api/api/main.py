@@ -3,6 +3,9 @@ from fastapi import FastAPI
 
 from noise_api.api.endpoints import router as tasks_router
 from noise_api.config import settings
+from noise_api.logs import setup_logging
+
+setup_logging()
 
 app = FastAPI(
     title=settings.title,
