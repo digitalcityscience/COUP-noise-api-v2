@@ -7,7 +7,8 @@ import uuid
 from typing import Any
 
 from pydantic import BaseModel
-from user_api.config import settings
+
+from noise_api.config import settings
 
 
 def setup_logging():
