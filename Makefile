@@ -17,10 +17,21 @@ start:
 	docker compose up --build
 
 fmt:
-	black ./user_api/ ./tests/
-	isort ./user_api/ ./tests/
+	black ./noise_api/ ./tests/
+	isort ./noise_api/ ./tests/
 
 lint:
-	black --check ./user_api/ ./tests/ 
-	isort --check ./user_api/ ./tests/
-	flake8 ./user_api/ ./tests/
+	black --check ./noise_api/ ./tests/ 
+	isort --check ./noise_api/ ./tests/
+	flake8 ./noise_api/ ./tests/
+
+build:
+	docker compose build
+
+test-it: build 
+	docker compose --env-file .env.example run --rm -it  --entrypoint bash noise-api -c "/bin/bash"
+	docker compose down -v
+
+test-docker: build
+	docker-compose --env-file .env.example run --rm  noise-api sh -c "sleep 5 && pytest $(pytest-args)"
+	docker compose down -v
