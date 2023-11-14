@@ -36,10 +36,10 @@ async def get_task(task_id: str):
     async_result = AsyncResult(task_id, app=celery_app)
 
     response = {
-        "taskId": async_result.id,
-        "taskState": async_result.state,
-        "taskSucceeded": async_result.successful(),
-        "resultReady": async_result.ready(),
+        "task_id": async_result.id,
+        "task_state": async_result.state,
+        "task_succeeded": async_result.successful(),
+        "result_ready": async_result.ready(),
     }
 
     if async_result.ready():
