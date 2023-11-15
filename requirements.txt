@@ -11,5 +11,5 @@ tenacity==8.2.3
 
 # Tests
 pytest==7.2.1
-requests==2.27.1
+requests==2.31.0
 httpx==0.25.1
