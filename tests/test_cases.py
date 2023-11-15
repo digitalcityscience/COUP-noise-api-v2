@@ -27,7 +27,7 @@ def load_test_cases(directory: Path) -> list[dict]:
     "test_case",
     load_test_cases(TEST_CASES_DIR),
 )
-def test_water_calculation(unauthorized_api_test_client, test_case):
+def test_noise_calculation(unauthorized_api_test_client, test_case):
     with unauthorized_api_test_client as client:
         response = client.post("/task", json=test_case["request"])
         assert response.status_code == 200
