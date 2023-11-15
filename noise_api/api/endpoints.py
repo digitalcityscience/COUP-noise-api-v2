@@ -28,7 +28,7 @@ async def process_task(
         f"Result with key: {calculation_task.celery_key} not found in cache. Starting calculation ..."
     )
     result = tasks.compute_task.delay(jsonable_encoder(calculation_task))
-    return {"taskId": result.id}
+    return {"task_id": result.id}
 
 
 @router.get("/tasks/{task_id}")

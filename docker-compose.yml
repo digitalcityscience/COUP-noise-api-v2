@@ -16,7 +16,7 @@ services:
       - redis
   
   redis:
-    container_name: redis-noise-api
+    container_name: noise-api-redis
     image: redis:6.2-alpine
     expose: 
       - ${REDIS_PORT}
@@ -27,7 +27,7 @@ services:
       - "./redis/data:/data"
   
   celery-worker:
-    container_name: celery-worker-noise-api
+    container_name: noise-api-celery-worker
     build: .
     restart: "always"
     command: celery -A noise_api.tasks worker --loglevel=info
@@ -36,16 +36,6 @@ services:
       - .env
     volumes:
       - ./:/app
-  
-  # flower-noise-api:
-  #   container_name: flower-noise-api
-  #   build: .
-  #   command: celery -A noise_api.tasks flower --port=5555
-  #   networks: *network_mode
-  #   ports:
-  #     - '5556:5555'
-  #   env_file:
-  #     - .env
 
 networks:
   bridgenet:
