@@ -26,6 +26,7 @@ def drop_z_value_from_coords(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
     return gdf
 
+
 def add_zero_as_z_value(geometry: gpd.GeoSeries):
     """
     Reset the Z value of each coordinate of the given geometry to 0.
@@ -37,17 +38,16 @@ def add_zero_as_z_value(geometry: gpd.GeoSeries):
         return LineString(coords)
 
     if isinstance(geometry, MultiLineString):
-        coords = get_coordinates(geometry, include_z=False)
-        fixed_coords = [[(x, y, 0) for x, y in line] for line in coords]
-
+        coords = [get_coordinates(line, include_z=False) for line in geometry.geoms]
+        fixed_coords = [[(x, y, 0) for x, y in line] for line in list(coords)]
         return MultiLineString(fixed_coords)
 
     if isinstance(geometry, Polygon):
         exterior = [(x, y, 0) for x, y in list(geometry.exterior.coords)]
-        interiors = []
-        for interior in geometry.interiors:
-            interiors.append([(x, y, 0) for x, y in list(interior.coords)])
-
+        interiors = [
+            [(x, y, 0) for x, y in list(interior.coords)]
+            for interior in geometry.interiors
+        ]
         return Polygon(exterior, holes=interiors)
     else:
         raise ValueError(

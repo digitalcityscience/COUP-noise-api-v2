@@ -325,3 +325,4 @@ dev_files/
 files/
 redis-data/
 log.txt
+noise_analysis/results/
