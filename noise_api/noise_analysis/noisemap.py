@@ -198,7 +198,4 @@ def run_noise_calculation(task_def: dict):
     #   https: // github.com / Ifsttar / NoiseModelling / blob / master / noisemap - core / src / main / java / org /
     #   orbisgis / noisemap / core / jdbc / JdbcNoiseMap.java  # L68
 
-    # if calculation_settings["result_format"] == "png":
-    #     return convert_result_to_png(noise_result_geojson)
-
-    return {"result_format": task_def["result_format"], "geojson": noise_result_geojson}
+    return noise_result_geojson

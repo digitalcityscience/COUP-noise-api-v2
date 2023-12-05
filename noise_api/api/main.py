@@ -14,7 +14,7 @@ app = FastAPI(
 )
 
 
-@app.get("/health_check", tags=["ROOT"])
+@app.get("/noise/health_check", tags=["ROOT"])
 async def health_check():
     return "ok"
 
