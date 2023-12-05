@@ -198,4 +198,4 @@ def run_noise_calculation(task_def: dict):
     #   https: // github.com / Ifsttar / NoiseModelling / blob / master / noisemap - core / src / main / java / org /
     #   orbisgis / noisemap / core / jdbc / JdbcNoiseMap.java  # L68
 
-    return {"geojson": noise_result_geojson}
+    return noise_result_geojson
