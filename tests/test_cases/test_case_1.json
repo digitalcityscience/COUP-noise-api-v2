@@ -2,7 +2,6 @@
   "request": {
     "max_speed": 50,
     "traffic_quota": 1,
-    "result_format": "geojson",
     "buildings": {
       "type": "FeatureCollection",
       "features": [
@@ -607,7 +606,6 @@
     }
   },
   "response": {
-    "result_format": "geojson",
     "geojson": {
       "type": "FeatureCollection",
       "crs": {

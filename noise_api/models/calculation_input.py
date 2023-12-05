@@ -20,7 +20,6 @@ class NoiseScenario(BaseModelStrict):
 class NoiseCalculationInput(NoiseScenario):
     buildings: dict
     roads: dict
-    result_format: str
 
     class Config:
         schema_extra = {
@@ -29,7 +28,6 @@ class NoiseCalculationInput(NoiseScenario):
                 "traffic_quota": 40,
                 "buildings": load_json_file(BUILDINGS),
                 "roads": load_json_file(ROADS),
-                "result_format": "geojson",
             }
         }
 
