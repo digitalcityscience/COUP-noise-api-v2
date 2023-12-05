@@ -29,7 +29,7 @@ def load_test_cases(directory: Path) -> list[dict]:
 )
 def test_noise_calculation(unauthorized_api_test_client, test_case):
     with unauthorized_api_test_client as client:
-        response = client.post("/noise/tasks", json=test_case["request"])
+        response = client.post("/processes/noise/execution", json=test_case["request"])
         assert response.status_code == 200
         task_id = response.json()["task_id"]
 
