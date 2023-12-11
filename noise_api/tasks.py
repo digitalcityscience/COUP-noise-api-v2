@@ -21,6 +21,8 @@ def task_postrun_handler(task_id, task, *args, **kwargs):
     args = kwargs.get("args")[0]
     result = kwargs.get("retval")
 
+    result["job_id"] = task_id
+
     if state == "SUCCESS":
         key = args["celery_key"]
         cache.put(key=key, value=result)
