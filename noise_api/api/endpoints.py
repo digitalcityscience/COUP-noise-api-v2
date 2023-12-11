@@ -44,7 +44,7 @@ async def get_job(job_id: str):
     }
 
 
-@router.get("/jobs/{job_id}")
+@router.get("/jobs/{job_id}/status")
 async def get_job_status(job_id: str):
     async_result = AsyncResult(job_id, app=celery_app)
     if async_result.state == "FAILURE":
