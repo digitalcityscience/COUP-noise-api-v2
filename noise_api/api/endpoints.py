@@ -25,7 +25,7 @@ async def process_job(
         return {"job_id": result["job_id"]}
 
     logger.info(
-        f"Result with key: {calculation_task.celery_key} not found in cache. Starting calculation ..."
+        f"Result with key: {calculation_task.celery_key} not found in cache. Starting calculation  ..."
     )
     result = tasks.compute_task.delay(jsonable_encoder(calculation_task))
     return {"job_id": result.id}
@@ -47,6 +47,7 @@ async def get_job(job_id: str):
 @router.get("/jobs/{job_id}/status")
 async def get_job_status(job_id: str):
     async_result = AsyncResult(job_id, app=celery_app)
+
     if async_result.state == "FAILURE":
         return {"status": "FAILURE", "details": {str(async_result.get())}}
     return {"status": async_result.state}
