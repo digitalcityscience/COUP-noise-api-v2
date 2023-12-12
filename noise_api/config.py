@@ -42,7 +42,7 @@ class Computation(BaseSettings):
     settings_name: str = "max triangle area"
     max_prop_distance: int = 750  # the lower the less accurate
     max_wall_seeking_distance: int = 50  # the lower  the less accurate
-    road_with: int = 1.5  # the higher the less accurate
+    road_with: float = 1.5  # the higher the less accurate
     receiver_densification: float = 2.8  # the higher the less accurate
     max_triangle_area: int = 275  # the higher the less accurate
     sound_reflection_order: int = 0  # the higher the less accurate
