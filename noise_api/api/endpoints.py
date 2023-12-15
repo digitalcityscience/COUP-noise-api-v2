@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["jobs"])
 
 
-@router.post("/execution")
+@router.post("/processes/traffic-noise/execution")
 async def process_job(
     calculation_input: NoiseCalculationInput,
 ):
