@@ -11,6 +11,9 @@ app = FastAPI(
     title=settings.title,
     descriprition=settings.description,
     version=settings.version,
+    redoc_url="/noise/redoc",
+    docs_url="/noise/docs",
+    openapi_url="/noise/openapi.json",
 )
 
 
