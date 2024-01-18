@@ -13,8 +13,15 @@ app = FastAPI(
     version=settings.version,
     redoc_url="/noise/redoc",
     docs_url="/noise/docs",
-    openapi_url="/noise/openapi.json",
+    openapi_url=None,
 )
+
+
+@app.get(
+    "/noise/openapi.json",
+)
+async def openapi():
+    return app.openapi()
 
 
 @app.get("/noise/health_check", tags=["ROOT"])
