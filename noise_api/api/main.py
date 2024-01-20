@@ -17,23 +17,13 @@ app = FastAPI(
     openapi_url="/noise/openapi.json",
 )
 
-# TODO replace origins
-origins = ["*"]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.get(
-    "/noise/openapi.json",
-)
-async def openapi():
-    return app.openapi()
 
 
 @app.get("/noise/health_check", tags=["ROOT"])
