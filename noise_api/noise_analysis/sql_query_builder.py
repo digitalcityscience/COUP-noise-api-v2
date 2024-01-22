@@ -65,32 +65,33 @@ def get_train_track_data(road_properties):
     return train_speed, train_per_hour, ground_type, has_anti_vibration
 
 
-def apply_traffic_settings_to_design_roads(design_roads, traffic_settings):
+def apply_traffic_settings_to_roads(roads, traffic_settings):
     max_speed = traffic_settings["max_speed"]
     traffic_quota = traffic_settings["traffic_quota"]
 
-    for road in design_roads["features"]:
+    for road in roads["features"]:
         # only adjust traffic settings of manipulatable roads
         if (
             "traffic_settings_adjustable" in list(road["properties"].keys())
             and road["properties"]["traffic_settings_adjustable"]
         ):
-            road["properties"]["max_speed"] = max_speed
-            road["properties"]["truck_traffic_daily"] = (
-                road["properties"]["truck_traffic_daily"] * traffic_quota
-            )
-            road["properties"]["car_traffic_daily"] = (
-                road["properties"]["car_traffic_daily"] * traffic_quota
-            )
+            if max_speed is not None:
+                road["properties"]["max_speed"] = max_speed
 
-    return design_roads
+            if traffic_quota is not None:
+                road["properties"]["truck_traffic_daily"] = (
+                    road["properties"]["truck_traffic_daily"] * traffic_quota
+                )
+                road["properties"]["car_traffic_daily"] = (
+                    road["properties"]["car_traffic_daily"] * traffic_quota
+                )
+
+    return roads
 
 
-def get_road_queries(traffic_settings, roads_gdf):
+def get_road_queries(roads_gdf, traffic_settings):
     roads_geojson = json.loads(roads_gdf.to_json())
-    roads_geojson = apply_traffic_settings_to_design_roads(
-        roads_geojson, traffic_settings
-    )
+    roads_geojson = apply_traffic_settings_to_roads(roads_geojson, traffic_settings)
     road_features = roads_geojson["features"]
 
     for feature in road_features:

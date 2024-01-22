@@ -139,7 +139,7 @@ def get_settings():
 
 
 def calculate_noise_result(
-        cursor, connection, traffic_settings, buildings_geojson, roads_geojson
+        cursor, buildings_geojson, roads_geojson, traffic_settings
 ) -> dict:
     # reproject input geojsons to local metric crs
     # TODO: all coordinates for roads and buildings are currently set to z level 0
@@ -161,7 +161,7 @@ def calculate_noise_result(
     print("Make roads table (just geometries and road type)..")
     reset_all_roads()
     cursor.execute(queries.RESET_ROADS_GEOM_TABLE)
-    roads_queries = get_road_queries(traffic_settings, roads_gdf)
+    roads_queries = get_road_queries(roads_gdf, traffic_settings)
     for road in roads_queries:
         cursor.execute("""{0}""".format(road))
 
@@ -213,13 +213,12 @@ def run_noise_calculation(task_def: dict):
     with H2DatabaseContextManager() as h2_context:
         noise_result_geojson = calculate_noise_result(
             h2_context.psycopg2_cursor,
-            h2_context.conn,
-            {
-                "max_speed": task_def["max_speed"],
-                "traffic_quota": task_def["traffic_quota"],
-            },
             task_def["buildings"],
             task_def["roads"],
+            {
+                "max_speed": task_def.get("max_speed", None),
+                "traffic_quota": task_def.get("traffic_quota", None)
+            }
         )
 
     # Try to make noise computation even faster
