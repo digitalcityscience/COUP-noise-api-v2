@@ -80,10 +80,10 @@ def apply_traffic_settings_to_roads(roads, traffic_settings):
 
             if traffic_quota is not None:
                 road["properties"]["truck_traffic_daily"] = (
-                    road["properties"]["truck_traffic_daily"] * traffic_quota
+                    road["properties"]["truck_traffic_daily"] * (traffic_quota / 100)
                 )
                 road["properties"]["car_traffic_daily"] = (
-                    road["properties"]["car_traffic_daily"] * traffic_quota
+                    road["properties"]["car_traffic_daily"] * (traffic_quota / 100)
                 )
 
     return roads
