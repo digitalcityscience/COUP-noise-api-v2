@@ -7,7 +7,12 @@ from fastapi.encoders import jsonable_encoder
 
 import noise_api.tasks as tasks
 from noise_api.dependencies import cache, celery_app
-from noise_api.models.calculation_input import NoiseCalculationInput, NoiseTask, BUILDINGS, ROADS
+from noise_api.models.calculation_input import (
+    BUILDINGS,
+    ROADS,
+    NoiseCalculationInput,
+    NoiseTask,
+)
 from noise_api.utils import load_json_file
 
 logger = logging.getLogger(__name__)
@@ -17,32 +22,32 @@ router = APIRouter(tags=["jobs"])
 
 @router.post("/processes/traffic-noise/execution")
 async def process_job(
-        calculation_input: Annotated[
-            NoiseCalculationInput,
-            Body(
-                openapi_examples={
-                    "without_global_traffic_settings": {
-                        "summary": "Without global traffic settings",
-                        "description": "Max speed and traffic loads as stated in 'roads' parameter will not be changed",
-                        "value": {
-                            "buildings": load_json_file(BUILDINGS),
-                            "roads": load_json_file(ROADS)
-                        }
+    calculation_input: Annotated[
+        NoiseCalculationInput,
+        Body(
+            openapi_examples={
+                "without_global_traffic_settings": {
+                    "summary": "Without global traffic settings",
+                    "description": "Max speed and traffic loads as stated in 'roads' parameter will not be changed",
+                    "value": {
+                        "buildings": load_json_file(BUILDINGS),
+                        "roads": load_json_file(ROADS),
                     },
-                    "global_traffic_settings": {
-                        "summary": "Global traffic settings",
-                        "description": "Max speed and traffic quota[%] will be applied to all roads \
+                },
+                "global_traffic_settings": {
+                    "summary": "Global traffic settings",
+                    "description": "Max speed and traffic quota[%] will be applied to all roads \
                            with 'traffic_settings_adjustable' == true",
-                        "value": {
-                            "max_speed": 42,
-                            "traffic_quota": 40,
-                            "buildings": load_json_file(BUILDINGS),
-                            "roads": load_json_file(ROADS),
-                        }
-                    }
-                }
-            )
-        ]
+                    "value": {
+                        "max_speed": 42,
+                        "traffic_quota": 40,
+                        "buildings": load_json_file(BUILDINGS),
+                        "roads": load_json_file(ROADS),
+                    },
+                },
+            }
+        ),
+    ]
 ):
     calculation_task = NoiseTask(**calculation_input.dict())
     if result := cache.get(key=calculation_task.celery_key):

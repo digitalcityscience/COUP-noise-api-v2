@@ -4,10 +4,10 @@ import os
 import shlex
 import subprocess
 from pathlib import Path
-import geopandas as gpd
-from shapely.geometry import box
 
+import geopandas as gpd
 import psycopg2
+from shapely.geometry import box
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from noise_api.noise_analysis import queries
@@ -126,20 +126,20 @@ def export_result_from_db_to_geojson(cursor):
 
 def get_settings():
     return {
-        'settings_name': 'max triangle area',
-        'max_prop_distance': 750,  # the lower the less accurate
-        'max_wall_seeking_distance': 50,  # the lower  the less accurate
-        'road_with': 1.5,  # the higher the less accurate
-        'receiver_densification': 2.8,  # the higher the less accurate
-        'max_triangle_area': 275,  # the higher the less accurate
-        'sound_reflection_order': 0,  # the higher the less accurate
-        'sound_diffraction_order': 0,  # the higher the less accurate
-        'wall_absorption': 0.23,  # the higher the less accurate
+        "settings_name": "max triangle area",
+        "max_prop_distance": 750,  # the lower the less accurate
+        "max_wall_seeking_distance": 50,  # the lower  the less accurate
+        "road_with": 1.5,  # the higher the less accurate
+        "receiver_densification": 2.8,  # the higher the less accurate
+        "max_triangle_area": 275,  # the higher the less accurate
+        "sound_reflection_order": 0,  # the higher the less accurate
+        "sound_diffraction_order": 0,  # the higher the less accurate
+        "wall_absorption": 0.23,  # the higher the less accurate
     }
 
 
 def calculate_noise_result(
-        cursor, buildings_geojson, roads_geojson, traffic_settings
+    cursor, buildings_geojson, roads_geojson, traffic_settings
 ) -> dict:
     # reproject input geojsons to local metric crs
     # TODO: all coordinates for roads and buildings are currently set to z level 0
@@ -186,10 +186,14 @@ def calculate_noise_result(
 
     print("Please wait, sound propagation from sources through buildings ...")
 
-    cursor.execute("""drop table if exists tri_lvl; create table tri_lvl as SELECT * from BR_TriGrid((select 
+    cursor.execute(
+        """drop table if exists tri_lvl; create table tri_lvl as SELECT * from BR_TriGrid((select
     st_expand(st_envelope(st_accum(the_geom)), 750, 750) the_geom from ROADS_SRC),'buildings','roads_src','DB_M','',
     {max_prop_distance},{max_wall_seeking_distance},{road_with},{receiver_densification},{max_triangle_area},
-    {sound_reflection_order},{sound_diffraction_order},{wall_absorption}); """.format(**get_settings()))
+    {sound_reflection_order},{sound_diffraction_order},{wall_absorption}); """.format(
+            **get_settings()
+        )
+    )
 
     # this leads to an invalid tri_lvl table , with all receiver values = 1 . replaced with old query above
     # cursor.execute(queries.RESET_TRI_LVL_TABLE)
@@ -202,12 +206,17 @@ def calculate_noise_result(
     noise_result_geojson = export_result_from_db_to_geojson(cursor)
 
     # clip to buildings extend
-    result_gdf = gpd.GeoDataFrame.from_features(noise_result_geojson["features"], crs="EPSG:4326")
+    result_gdf = gpd.GeoDataFrame.from_features(
+        noise_result_geojson["features"], crs="EPSG:4326"
+    )
     # rename "idiso" column to "value"
     result_gdf = result_gdf.rename(columns={"idiso": "value"})
-    result_gdf_clip = gpd.clip(result_gdf, box(*list(buildings_gdf.to_crs("EPSG:4326").total_bounds)))
+    result_gdf_clip = gpd.clip(
+        result_gdf, box(*list(buildings_gdf.to_crs("EPSG:4326").total_bounds))
+    )
 
     return json.loads(result_gdf_clip.to_json())
+
 
 def run_noise_calculation(task_def: dict):
     with H2DatabaseContextManager() as h2_context:
@@ -217,8 +226,8 @@ def run_noise_calculation(task_def: dict):
             task_def["roads"],
             {
                 "max_speed": task_def.get("max_speed", None),
-                "traffic_quota": task_def.get("traffic_quota", None)
-            }
+                "traffic_quota": task_def.get("traffic_quota", None),
+            },
         )
 
     # Try to make noise computation even faster

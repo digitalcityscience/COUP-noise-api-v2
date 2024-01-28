@@ -1,7 +1,7 @@
 from pathlib import Path
-
-from pydantic import Field, BaseModel
 from typing import Optional
+
+from pydantic import Field
 
 from noise_api.models.base import BaseModelStrict
 from noise_api.utils import hash_dict, load_json_file
