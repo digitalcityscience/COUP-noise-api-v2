@@ -1,6 +1,5 @@
 import uvicorn
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 from noise_api.api.endpoints import router as tasks_router
 from noise_api.config import settings
@@ -8,30 +7,24 @@ from noise_api.logs import setup_logging
 
 setup_logging()
 
+API_PREFIX = "/noise"
+
 app = FastAPI(
     title=settings.title,
     descriprition=settings.description,
     version=settings.version,
-    redoc_url="/noise/redoc",
-    docs_url="/noise/docs",
-    openapi_url="/noise/openapi.json",
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    redoc_url=f"{API_PREFIX}/redoc",
+    docs_url=f"{API_PREFIX}/docs",
+    openapi_url=f"{API_PREFIX}/openapi.json",
 )
 
 
-@app.get("/noise/health_check", tags=["ROOT"])
+@app.get(f"{API_PREFIX}/health_check", tags=["ROOT"])
 async def health_check():
     return "ok"
 
 
-app.include_router(tasks_router, prefix="/noise")
+app.include_router(tasks_router, prefix=API_PREFIX)
 
 
 if __name__ == "__main__":
