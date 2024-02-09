@@ -1,5 +1,14 @@
 import os
 
+"""
+Uses openapi.json (generated from fastapi + pydantic models) 
+to create and serve OGC-API-PROCESSES compatible description jsons for 
+- processes
+- processes/process-id
+- conformances
+- landingpage
+"""
+
 
 def get_landingpage_json():
     return {
@@ -39,15 +48,6 @@ def get_processes(openapi_json: dict) -> dict:
 
     return {"processes": processes}
 
-
-"""
-    post constructor (
-       id from path.
-        summary -> title
-        summary -> description
-    )
-    
-"""
 
 
 def generate_process_description(openapi_json: dict, process_path: str) -> dict:
