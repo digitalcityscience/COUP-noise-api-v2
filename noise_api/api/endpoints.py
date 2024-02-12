@@ -26,6 +26,11 @@ def generate_openapi_json():
     return get_openapi(title=os.environ["APP_TITLE"], version="1.0.0", routes=router.routes, openapi_version="3.0.0")
 
 
+@router.get("/conformance")
+async def get_conformances() -> dict:
+    return get_conformance()
+
+
 @router.get("/processes/{process_id}")
 @router.get("/processes")
 async def get_processes_json(process_id: str = None) -> dict:
