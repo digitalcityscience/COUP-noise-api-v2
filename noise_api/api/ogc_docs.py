@@ -109,9 +109,11 @@ def generate_process_description(openapi_json: dict, process_path: str) -> dict:
 def get_conformance():
     return {
         "conformsTo": [
-            "http://www.opengis.net/spec/ogcapi-processes/1.0/conf/core"
+            "http://www.opengis.net/spec/ogcapi-processes/1.0/conf/core",
+            "http://www.opengis.net/spec/ogcapi-processes/1.0/conf/json",
         ]
     }
+
 
 if __name__ == "__main__":
     landingpage = get_landingpage_json()
