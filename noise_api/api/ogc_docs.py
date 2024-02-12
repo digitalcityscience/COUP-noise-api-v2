@@ -49,7 +49,6 @@ def get_processes(openapi_json: dict) -> dict:
     return {"processes": processes}
 
 
-
 def generate_process_description(openapi_json: dict, process_path: str) -> dict:
     print("generating process description for", process_path)
 
@@ -113,9 +112,3 @@ def get_conformance():
             "http://www.opengis.net/spec/ogcapi-processes/1.0/conf/json",
         ]
     }
-
-
-if __name__ == "__main__":
-    landingpage = get_landingpage_json()
-    processes = get_processes()
-    corformance = get_conformance()

@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Annotated
 
@@ -7,7 +8,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.openapi.utils import get_openapi
 
 import noise_api.tasks as tasks
-from noise_api.api.ogc_docs import get_processes
+from noise_api.api.ogc_docs import get_processes, get_conformance
 from noise_api.dependencies import cache, celery_app
 from noise_api.models.calculation_input import NoiseCalculationInput, NoiseTask, BUILDINGS, ROADS
 from noise_api.utils import load_json_file
