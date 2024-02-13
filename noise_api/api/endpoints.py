@@ -93,7 +93,7 @@ async def process_job(
     result = tasks.compute_task.delay(jsonable_encoder(calculation_task))
 
     # OGC Processes Requirement 34 | /req/core/process-execute-success-async
-    response_content["jobID"] = result["job_id"]
+    response_content["jobID"] = result.id
     response_content["status"] = StatusInfo.ACCEPTED.value
     response.headers["Location"] = f"/noise/jobs/{result.id}"
 
