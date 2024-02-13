@@ -16,5 +16,8 @@ def test_noise_calculation(unauthorized_api_test_client, traffic_noise_desc):
         response = client.get(
             "/noise/processes/traffic-noise"
         )
+
+        with open("data/traffic-noise_ogc_process_description.json", "w") as f:
+            json.dump(response.json(), f)
         assert response.status_code == 200
-        assert response.json() == traffic_noise_desc
+        assert traffic_noise_desc == response.json()

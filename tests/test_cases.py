@@ -46,7 +46,7 @@ def test_noise_calculation(unauthorized_api_test_client, test_case):
         response = client.post(
             "/noise/processes/traffic-noise/execution", json=test_case["request"]
         )
-        assert response.status_code == 200
+        assert response.status_code == 201
         job_id = response.json()["job_id"]
         print(job_id)
 
