@@ -1,4 +1,7 @@
 import os
+from noise_api.utils import load_json_file
+from noise_api.models.calculation_input import NoiseCalculationInput, NoiseTask, BUILDINGS, ROADS
+
 
 """
 Uses openapi.json (generated from fastapi + pydantic models) 
@@ -60,6 +63,7 @@ def generate_process_description(openapi_json: dict, process_path: str) -> dict:
                 "description": openapi_json["paths"][path]["post"]["summary"],
                 "outputTransmission": ["value"],
                 "jobControlOptions": ["async-execute"],
+                "keywords": openapi_json["paths"][path]["post"]["summary"].split(" "),
                 "inputs": {}
             }
             inputs_info_path = \
@@ -111,4 +115,29 @@ def get_conformance():
             "http://www.opengis.net/spec/ogcapi-processes/1.0/conf/core",
             "http://www.opengis.net/spec/ogcapi-processes/1.0/conf/json",
         ]
+    }
+
+
+def get_openapi_examples():
+    return {
+        "without_global_traffic_settings": {
+            "summary": "Without global traffic settings",
+            "description": "Max speed and traffic loads as stated in 'roads' parameter will not be changed",
+            "value": {
+                "buildings": load_json_file(BUILDINGS),
+                "roads": load_json_file(ROADS)
+            }
+        },
+        "global_traffic_settings": {
+            "summary": "Global traffic settings",
+            "description": "Max speed and traffic quota[%] will be applied to all roads \
+                           with 'traffic_settings_adjustable' == true",
+            "value": {
+                "max_speed": 42,
+                "traffic_quota": 40,
+                "wall_absorption": 0.23,
+                "buildings": load_json_file(BUILDINGS),
+                "roads": load_json_file(ROADS),
+            }
+        }
     }
