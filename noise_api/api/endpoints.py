@@ -1,84 +1,141 @@
+import os
 import logging
 from typing import Annotated
 
 from celery.result import AsyncResult
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, Response, HTTPException
 from fastapi.encoders import jsonable_encoder
+from fastapi.openapi.utils import get_openapi
 
 import noise_api.tasks as tasks
+from noise_api.api.documentation import get_processes, get_conformance, get_landingpage_json, get_openapi_examples
 from noise_api.dependencies import cache, celery_app
-from noise_api.models.calculation_input import (
-    BUILDINGS,
-    ROADS,
-    NoiseCalculationInput,
-    NoiseTask,
-)
-from noise_api.utils import load_json_file
+from noise_api.models.calculation_input import NoiseCalculationInput, NoiseTask
+from noise_api.models.job_status_info import StatusInfo
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["jobs"])
 
 
-@router.post("/processes/traffic-noise/execution")
+def generate_openapi_json():
+    return get_openapi(title=os.environ["APP_TITLE"], version="1.0.0", routes=router.routes, openapi_version="3.0.0")
+
+
+@router.get("/")
+async def get_landing_page() -> dict:
+    """
+    OGC Processes 7.2 Retrieve the API Landing page | https://docs.ogc.org/is/18-062r2/18-062r2.html#toc23
+    """
+    return get_landingpage_json()
+
+
+@router.get("/conformance")
+async def get_conformances() -> dict:
+    """
+    OGC Processes 7.4 Declaration of conformances | https://docs.ogc.org/is/18-062r2/18-062r2.html#toc25
+    """
+    return get_conformance()
+
+
+@router.get("/processes/{process_id}")
+@router.get("/processes")
+async def get_processes_json(process_id: str = None) -> dict:
+    """
+    OGC Processes 7.9 Process List https://docs.ogc.org/is/18-062r2/18-062r2.html#toc30
+    OGC Processes 7.10 Process Description https://docs.ogc.org/is/18-062r2/18-062r2.html#toc31
+    """
+    processes = get_processes(generate_openapi_json())
+
+    if process_id:
+        for process in processes["processes"]:
+            print(process)
+            if process["id"] == process_id:
+                return process
+
+    return processes
+
+
+@router.post(
+    path="/processes/traffic-noise/execution",
+    tags=["process"],
+    summary="Traffic Noise Simulation",
+    status_code=201
+)
 async def process_job(
-    calculation_input: Annotated[
-        NoiseCalculationInput,
-        Body(
-            openapi_examples={
-                "without_global_traffic_settings": {
-                    "summary": "Without global traffic settings",
-                    "description": "Max speed and traffic loads as stated in 'roads' parameter will not be changed",
-                    "value": {
-                        "buildings": load_json_file(BUILDINGS),
-                        "roads": load_json_file(ROADS),
-                    },
-                },
-                "global_traffic_settings": {
-                    "summary": "Global traffic settings",
-                    "description": "Max speed and traffic quota[%] will be applied to all roads \
-                           with 'traffic_settings_adjustable' == true",
-                    "value": {
-                        "max_speed": 42,
-                        "traffic_quota": 40,
-                        "buildings": load_json_file(BUILDINGS),
-                        "roads": load_json_file(ROADS),
-                    },
-                },
-            }
-        ),
-    ]
+        calculation_input: Annotated[
+            NoiseCalculationInput,
+            Body(
+                openapi_examples=get_openapi_examples()
+            )
+        ],
+        response: Response
 ):
+    response_content = {
+            "processID": "traffic-noise",
+            "type": "process",
+    }
+
     calculation_task = NoiseTask(**calculation_input.dict())
     if result := cache.get(key=calculation_task.celery_key):
         logger.info(
             f"Result fetched from cache with key: {calculation_task.celery_key}"
         )
-        return {"job_id": result["job_id"]}
+
+        response_content["jobID"] = result["job_id"]
+        response_content["status"] = StatusInfo.SUCCESS.value
+
+        return response_content
 
     logger.info(
         f"Result with key: {calculation_task.celery_key} not found in cache. Starting calculation ..."
     )
     result = tasks.compute_task.delay(jsonable_encoder(calculation_task))
-    return {"job_id": result.id}
+
+    # OGC Processes Requirement 34 | /req/core/process-execute-success-async
+    response_content["jobID"] = result.id
+    response_content["status"] = StatusInfo.ACCEPTED.value
+    response.headers["Location"] = f"/noise/jobs/{result.id}"
+
+    return response_content
 
 
 @router.get("/jobs/{job_id}/results")
 async def get_job(job_id: str):
     async_result = AsyncResult(job_id, app=celery_app)
 
+    if async_result.state == "PENDING":
+        # OGC 7.13.3 Requirement 45 | https://docs.ogc.org/is/18-062r2/18-062r2.html#toc34
+        raise HTTPException(404, detail="result not ready")
+
+    if async_result.failed():
+        # OGC 7.13.3 Requirement 46 | https://docs.ogc.org/is/18-062r2/18-062r2.html#toc34
+        raise HTTPException(status_code=500, detail=str(async_result.get()))
+
     if async_result.successful():
         return {"result": async_result.get()}
 
-    return {
-        "job_id": async_result.id,
-        "job_state": async_result.state,
-    }
+    raise HTTPException(status_code=404, detail="no such job")
 
 
-@router.get("/jobs/{job_id}/status")
+@router.get("/jobs/{job_id}")
 async def get_job_status(job_id: str):
     async_result = AsyncResult(job_id, app=celery_app)
+
+    response = {
+        "type": "process",
+        "jobID": job_id,
+    }
     if async_result.state == "FAILURE":
-        return {"status": "FAILURE", "details": {str(async_result.get())}}
-    return {"status": async_result.state}
+        response["status"] = StatusInfo.FAILURE.value
+        response["message"] = {str(async_result.get())}
+
+        return response
+
+    if async_result.state == "PENDING":
+        response["status"] = StatusInfo.PENDING.value
+
+    if async_result.state == "SUCCESS":
+        response["status"] = StatusInfo.SUCCESS.value
+
+    return response
