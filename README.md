@@ -1,4 +1,8 @@
 # CUT Prototype Noise API V2
+It offers an OGC-API-Processes conform service, with geojson based inputs/outputs to simulate urban traffic noise.
+
+In general this is a celery-based app using 3 containers each: api,worker, redis. The api container excepts requests and creates tasks in the redis db. Workers look for tasks in the redis db, calculate result and publish it in redis. Results (also cached ones) can be accessed via the api container that get’s the result from the redis db.
+
 
 ## Traffic-Noise Simulation
 
@@ -6,8 +10,6 @@ The noise module is used for investigating traffic noise patterns. The goal of t
 using a simplified implementation of the French national method NMPB-08.
 
 The software is developed by the French Institute of Science and Technology for Transport, Development and Networks (Ifsttar).
-
-In general this is a celery-based app using 3 containers each: api,worker, redis. The api container excepts requests and creates tasks in the redis db. Workers look for tasks in the redis db, calculate result and publish it in redis. Results (also cached ones) can be accessed via the api container that get’s the result from the redis db.
 
 ### Simulation Inputs
 
@@ -63,7 +65,6 @@ EU treshold for "relevant" noise is 55db
 
 Example result
 ![example_result.png](example_result.png)
-
 
 ## Local Dev
 
