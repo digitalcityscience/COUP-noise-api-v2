@@ -9,7 +9,7 @@ from fastapi.openapi.utils import get_openapi
 
 import noise_api.tasks as tasks
 from noise_api.api.documentation import get_processes, get_conformance, get_landingpage_json, get_openapi_examples
-from noise_api.dependencies import cache, celery_app
+from noise_api.dependencies import celery_app
 from noise_api.models.calculation_input import NoiseCalculationInput, NoiseTask
 from noise_api.models.job_status_info import StatusInfo
 
@@ -77,12 +77,15 @@ async def process_job(
     }
 
     calculation_task = NoiseTask(**calculation_input.dict())
-    if result := cache.get(key=calculation_task.celery_key):
+    if _result := tasks.find_result_in_cache(celery_key=calculation_task.celery_key):
         logger.info(
-            f"Result fetched from cache with key: {calculation_task.celery_key}"
+            f"Result already cached with key: {calculation_task.celery_key}"
         )
 
-        response_content["jobID"] = result["job_id"]
+        # run fetching result as task with delay, to get a jobID (to keep the workflow)
+        job_id = tasks.find_result_in_cache.delay(celery_key=calculation_task.celery_key).id
+
+        response_content["jobID"] = job_id
         response_content["status"] = StatusInfo.SUCCESS.value
 
         return response_content
