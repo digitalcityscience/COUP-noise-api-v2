@@ -15,13 +15,22 @@ def compute_task(task_def: dict) -> dict:
     return run_noise_calculation(task_def)
 
 
+@celery_app.task()
+def find_result_in_cache(celery_key: str) -> dict | None:
+    # Returns result dict or None
+    return cache.get(key=celery_key)
+
+
 @signals.task_postrun.connect
 def task_postrun_handler(task_id, task, *args, **kwargs):
+
+    if "find_result_in_cache" in task.name:
+        # do not cache again
+        return
+
     state = kwargs.get("state")
     args = kwargs.get("args")[0]
     result = kwargs.get("retval")
-
-    result["job_id"] = task_id
 
     if state == "SUCCESS":
         key = args["celery_key"]
